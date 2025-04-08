@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
     clc::ImageManager dstImageMgr{contextMgr, dstImage.getExtent(), clc::ResourceType::Write};
 
     clc::KernelManager kernelMgr{deviceMgr, contextMgr, kernel::grayscaleOclCode};
-    std::array kernelArgs{srcImageMgr.genKernelArg(), dstImageMgr.genKernelArg()};
+    std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
     kernelMgr.setKernelArgs(kernelArgs);
     clc::CommandBufferManager commandBufferMgr{pQueueMgr};
 

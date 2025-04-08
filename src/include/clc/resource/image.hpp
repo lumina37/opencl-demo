@@ -4,7 +4,7 @@
 
 #include "clc/device/context.hpp"
 #include "clc/extent.hpp"
-#include "clc/kernel.hpp"
+#include "clc/kernel/structs.hpp"
 #include "clc/resource/type.hpp"
 
 namespace clc {

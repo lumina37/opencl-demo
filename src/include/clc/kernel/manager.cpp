@@ -10,7 +10,7 @@
 #include "clc/helper/exception.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
-#    include "clc/kernel.hpp"
+#    include "clc/kernel/manager.hpp"
 #endif
 
 namespace clc {
@@ -37,8 +37,8 @@ KernelManager::KernelManager(DeviceManager& deviceMgr, ContextManager& contextMg
             std::println(std::cerr, "Kernel build failed: {}", pLog.get());
         }
     }
-
     checkError(errCode);
+
     kernel_ = clCreateKernel(program_, "clcmain", &errCode);
     checkError(errCode);
 }
