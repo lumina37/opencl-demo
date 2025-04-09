@@ -2,6 +2,8 @@
 
 #include <CL/cl.h>
 
+#include "clc/helper/math.hpp"
+
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/extent.hpp"
 #endif
@@ -21,6 +23,13 @@ cl_channel_order Extent::clChannel() const noexcept {
         default:
             std::unreachable();
     }
+}
+
+Extent& Extent::setRowAlign(const int rowAlign) noexcept {
+    rowAlign_ = rowAlign;
+    rowPitch_ = alignUp(width_ * comps_, rowAlign);
+    size_ = rowPitch_ * height_;
+    return *this;
 }
 
 }  // namespace clc

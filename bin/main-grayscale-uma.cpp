@@ -1,9 +1,13 @@
+#include <algorithm>
 #include <array>
+#include <ranges>
 
 #include "clc.hpp"
 #include "opencl/kernel.hpp"
 
-int main(int argc, char** argv) {
+namespace rgs = std::ranges;
+
+int main() {
     clc::StbImageManager srcImage{"in.png"};
     clc::StbImageManager dstImage{srcImage.getExtent()};
 
@@ -12,18 +16,19 @@ int main(int argc, char** argv) {
     clc::ContextManager contextMgr{deviceMgr};
     auto pQueueMgr = std::make_shared<clc::QueueManager>(deviceMgr, contextMgr);
 
-    clc::ImageManager srcImageMgr{contextMgr, srcImage.getExtent(), clc::ResourceType::Read};
-    clc::ImageManager dstImageMgr{contextMgr, dstImage.getExtent(), clc::ResourceType::Write};
+    clc::ImageViewManager srcImageViewMgr{contextMgr, srcImage.getExtent(), clc::ResourceType::Read,
+                                          srcImage.getImageSpan()};
+    clc::ImageViewManager dstImageViewMgr{contextMgr, dstImage.getExtent(), clc::ResourceType::Write,
+                                          dstImage.getImageSpan()};
 
     clc::KernelManager kernelMgr{deviceMgr, contextMgr, kernel::grayscaleOclCode};
-    std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
+    std::array kernelArgs = clc::genKernelArgs(srcImageViewMgr, dstImageViewMgr);
     kernelMgr.setKernelArgs(kernelArgs);
     clc::CommandBufferManager commandBufferMgr{pQueueMgr};
 
-    commandBufferMgr.uploadImageFrom(srcImageMgr, srcImage.getImageSpan(), srcImage.getExtent());
     commandBufferMgr.dispatch(kernelMgr, dstImage.getExtent(), {16, 16});
-    commandBufferMgr.downloadImageTo(dstImageMgr, dstImage.getImageSpan(), dstImage.getExtent());
-    commandBufferMgr.waitDownloadComplete();
+    auto dstSpan = commandBufferMgr.mmapForHostRead(dstImageViewMgr, dstImage.getExtent());
+    commandBufferMgr.unmap(dstImageViewMgr, dstSpan);
 
     dstImage.saveTo("out.png");
 }

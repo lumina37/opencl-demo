@@ -27,6 +27,9 @@ public:
     void downloadImageTo(const ImageManager& srcImageMgr, std::span<std::byte> dst, Extent extent);
     void waitDownloadComplete();
 
+    std::span<std::byte> mmapForHostRead(ImageViewManager& imageViewMgr, Extent extent);
+    void unmap(ImageViewManager& imageViewMgr, std::span<std::byte> mapSpan);
+
 private:
     std::shared_ptr<QueueManager> pQueueMgr_;
     std::vector<cl_event> uploadEvs_;

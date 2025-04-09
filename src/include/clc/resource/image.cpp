@@ -15,7 +15,7 @@ ImageManager::ImageManager(ContextManager& contextMgr, const Extent extent, cons
     cl_int errCode;
 
     auto context = contextMgr.getContext();
-    int clImageType = type == ResourceType::Read ? CL_MEM_READ_ONLY : CL_MEM_WRITE_ONLY;
+    const int clImageType = type == ResourceType::Read ? CL_MEM_READ_ONLY : CL_MEM_WRITE_ONLY;
 
     cl_image_desc imageDesc{};
     imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;

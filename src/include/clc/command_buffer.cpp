@@ -25,7 +25,7 @@ void CommandBufferManager::uploadImageFrom(ImageManager& dstImageMgr, const std:
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
     errCode = clEnqueueWriteImage(pQueueMgr_->getQueue(), dstImageMgr.getImage(), false, origin.data(), region.data(),
-                                  0, 0, src.data(), 0, nullptr, &uploadEvs_.back());
+                                  extent.rowPitch(), 0, src.data(), 0, nullptr, &uploadEvs_.back());
     checkError(errCode);
 }
 
@@ -47,13 +47,34 @@ void CommandBufferManager::downloadImageTo(const ImageManager& srcImageMgr, std:
     downloadEvs_.emplace_back();
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
-    errCode = clEnqueueReadImage(pQueueMgr_->getQueue(), srcImageMgr.getImage(), false, origin.data(), region.data(), 0,
-                                 0, dst.data(), 1, &dispatchEv_, &downloadEvs_.back());
+    errCode = clEnqueueReadImage(pQueueMgr_->getQueue(), srcImageMgr.getImage(), false, origin.data(), region.data(),
+                                 extent.rowPitch(), 0, dst.data(), 1, &dispatchEv_, &downloadEvs_.back());
     checkError(errCode);
 }
 
 void CommandBufferManager::waitDownloadComplete() {
     cl_int errCode = clWaitForEvents(downloadEvs_.size(), downloadEvs_.data());
+    checkError(errCode);
+}
+
+std::span<std::byte> CommandBufferManager::mmapForHostRead(ImageViewManager& imageViewMgr, const Extent extent) {
+    cl_int errCode;
+
+    const std::array<size_t, 3> origin{0, 0, 0};
+    const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
+    size_t rowPitch;
+    const void* mapPtr =
+        clEnqueueMapImage(pQueueMgr_->getQueue(), imageViewMgr.getImage(), true, CL_MAP_READ, origin.data(),
+                          region.data(), &rowPitch, nullptr, 1, &dispatchEv_, nullptr, &errCode);
+    checkError(errCode);
+
+    const std::span mapSpan{(std::byte*)mapPtr, extent.size()};
+    return mapSpan;
+}
+
+void CommandBufferManager::unmap(ImageViewManager& imageViewMgr, const std::span<std::byte> mapSpan) {
+    cl_int errCode =
+        clEnqueueUnmapMemObject(pQueueMgr_->getQueue(), imageViewMgr.getImage(), mapSpan.data(), 0, nullptr, nullptr);
     checkError(errCode);
 }
 

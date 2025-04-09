@@ -6,4 +6,5 @@ function(clc_add_executable name src)
     copy_dlls_if_needed(${name})
 endfunction()
 
-clc_add_executable(clc-bin-gaussFilter-v0-baseline main-gaussFilter-v0-baseline.cpp)
+clc_add_executable(clc-bin-grayscale main-grayscale.cpp)
+clc_add_executable(clc-bin-grayscale-uma main-grayscale-uma.cpp)

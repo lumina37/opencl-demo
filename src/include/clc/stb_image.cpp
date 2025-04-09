@@ -34,7 +34,8 @@ StbImageManager::StbImageManager(const Extent& extent) : extent_(extent) {
 StbImageManager::~StbImageManager() noexcept { STBI_FREE(image_); }
 
 void StbImageManager::saveTo(const fs::path& path) const {
-    stbi_write_png(path.string().c_str(), extent_.width(), extent_.height(), extent_.comps(), image_, 0);
+    stbi_write_png(path.string().c_str(), extent_.width(), extent_.height(), extent_.comps(), image_,
+                   (int)extent_.rowPitch());
 }
 
 }  // namespace clc
