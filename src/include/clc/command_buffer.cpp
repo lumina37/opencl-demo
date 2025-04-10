@@ -78,4 +78,20 @@ void CommandBufferManager::unmap(ImageViewManager& imageViewMgr, const std::span
     checkError(errCode);
 }
 
+cl_ulong CommandBufferManager::getDispatchElapsedTimeNs() const {
+    cl_int errCode;
+
+    cl_ulong time_start;
+    cl_ulong time_end;
+
+    errCode =
+        clGetEventProfilingInfo(dispatchEv_, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, nullptr);
+    checkError(errCode);
+    errCode = clGetEventProfilingInfo(dispatchEv_, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, nullptr);
+    checkError(errCode);
+
+    cl_ulong timecostNs = time_end - time_start;
+    return timecostNs;
+}
+
 }  // namespace clc

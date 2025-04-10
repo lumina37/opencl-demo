@@ -9,7 +9,7 @@ namespace clc {
 
 class QueueManager {
 public:
-    QueueManager(DeviceManager& deviceMgr, ContextManager& contextMgr);
+    QueueManager(DeviceManager& deviceMgr, ContextManager& contextMgr, cl_queue_properties queueProps = 0);
     ~QueueManager();
 
     [[nodiscard]] cl_command_queue getQueue() const noexcept { return queue_; }

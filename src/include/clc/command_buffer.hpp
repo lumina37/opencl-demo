@@ -30,6 +30,8 @@ public:
     std::span<std::byte> mmapForHostRead(ImageViewManager& imageViewMgr, Extent extent);
     void unmap(ImageViewManager& imageViewMgr, std::span<std::byte> mapSpan);
 
+    [[nodiscard]] cl_ulong getDispatchElapsedTimeNs() const;
+
 private:
     std::shared_ptr<QueueManager> pQueueMgr_;
     std::vector<cl_event> uploadEvs_;

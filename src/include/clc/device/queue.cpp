@@ -1,3 +1,5 @@
+#include <array>
+
 #include <CL/cl.h>
 
 #include "clc/device/context.hpp"
@@ -10,12 +12,14 @@
 
 namespace clc {
 
-QueueManager::QueueManager(DeviceManager& deviceMgr, ContextManager& contextMgr) {
+QueueManager::QueueManager(DeviceManager& deviceMgr, ContextManager& contextMgr, const cl_queue_properties queueProps) {
     cl_int errCode;
 
     auto device = deviceMgr.getDevice();
     auto context = contextMgr.getContext();
-    queue_ = clCreateCommandQueueWithProperties(context, device, nullptr, &errCode);
+    const std::array realQueueProps{(cl_queue_properties)CL_QUEUE_PROPERTIES,
+                                    queueProps | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, (cl_queue_properties)0};
+    queue_ = clCreateCommandQueueWithProperties(context, device, realQueueProps.data(), &errCode);
     checkError(errCode);
 }
 
