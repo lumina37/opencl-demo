@@ -11,7 +11,7 @@ template <std::unsigned_integral Tv>
 
 template <std::integral Tv>
 [[nodiscard]] static constexpr inline Tv alignUp(const Tv v, const size_t to) noexcept {
-    return (v + (to - 1)) & ((~to) + 1);
+    return (Tv)(((size_t)v + (to - 1)) & ((~to) + 1));
 }
 
 }  // namespace clc
