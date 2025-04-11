@@ -14,7 +14,7 @@ template <typename... Tv>
         if constexpr (CSupportGenKernelArg<T>) {
             return mgr.genKernelArg();
         } else if constexpr (std::is_trivially_copyable_v<T>) {
-            return {sizeof(T), &mgr};
+            return KernelArg{sizeof(T), &mgr};
         } else {
             std::unreachable();
         }
