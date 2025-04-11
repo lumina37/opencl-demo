@@ -17,6 +17,15 @@ CommandBufferManager::CommandBufferManager(const std::shared_ptr<QueueManager>& 
 
 CommandBufferManager::~CommandBufferManager() {}
 
+void CommandBufferManager::uploadBufferFrom(BufferManager& dstBufferMgr, const std::span<std::byte> src) {
+    cl_int errCode;
+
+    uploadEvs_.emplace_back();
+    errCode = clEnqueueWriteBuffer(pQueueMgr_->getQueue(), dstBufferMgr.getBuffer(), false, 0, src.size(), src.data(),
+                                   0, nullptr, &uploadEvs_.back());
+    checkError(errCode);
+}
+
 void CommandBufferManager::uploadImageFrom(ImageManager& dstImageMgr, const std::span<std::byte> src,
                                            const Extent extent) {
     cl_int errCode;

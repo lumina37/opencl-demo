@@ -22,6 +22,7 @@ public:
     CommandBufferManager(const std::shared_ptr<QueueManager>& pQueueMgr);
     ~CommandBufferManager();
 
+    void uploadBufferFrom(BufferManager& dstBufferMgr, std::span<std::byte> src);
     void uploadImageFrom(ImageManager& dstImageMgr, std::span<std::byte> src, Extent extent);
     void dispatch(const KernelManager& kernelMgr, Extent extent, GroupSize localGroupSize);
     void downloadImageTo(const ImageManager& srcImageMgr, std::span<std::byte> dst, Extent extent);
