@@ -26,6 +26,8 @@ public:
 
     void saveTo(const fs::path& path) const;
 
+    static cl_channel_order mapStbCompsToClChannelOrder(int comps) noexcept;
+
 private:
     std::byte* image_;
     Extent extent_;

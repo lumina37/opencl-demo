@@ -31,7 +31,7 @@ ImageViewManager::ImageViewManager(ContextManager& contextMgr, const Extent exte
     imageDesc.image_row_pitch = extent.rowPitch();
 
     cl_image_format imageFormat;
-    imageFormat.image_channel_order = extent.clChannel();
+    imageFormat.image_channel_order = extent.clChannelOrder();
     imageFormat.image_channel_data_type = CL_UNORM_INT8;
 
     image_ = clCreateImage(context, clImageType, &imageFormat, &imageDesc, hostMem.data(), &errCode);

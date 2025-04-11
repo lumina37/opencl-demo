@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <filesystem>
+#include <utility>
 
 #pragma push_macro("STB_IMAGE_IMPLEMENTATION")
 #pragma push_macro("STB_IMAGE_WRITE_IMPLEMENTATION")
@@ -24,7 +25,7 @@ StbImageManager::StbImageManager(const fs::path& path) {
     int width, height, oriComps;
     constexpr int comps = 4;
     image_ = (std::byte*)stbi_load(path.string().c_str(), &width, &height, &oriComps, comps);
-    extent_ = {width, height, comps};
+    extent_ = {width, height, mapStbCompsToClChannelOrder(comps)};
 }
 
 StbImageManager::StbImageManager(const Extent& extent) : extent_(extent) {
@@ -34,8 +35,23 @@ StbImageManager::StbImageManager(const Extent& extent) : extent_(extent) {
 StbImageManager::~StbImageManager() noexcept { STBI_FREE(image_); }
 
 void StbImageManager::saveTo(const fs::path& path) const {
-    stbi_write_png(path.string().c_str(), extent_.width(), extent_.height(), extent_.comps(), image_,
+    stbi_write_png(path.string().c_str(), extent_.width(), extent_.height(), extent_.bpp(), image_,
                    (int)extent_.rowPitch());
+}
+
+cl_channel_order StbImageManager::mapStbCompsToClChannelOrder(int comps) noexcept {
+    switch (comps) {
+        case 1:
+            return CL_R;
+        case 2:
+            return CL_RG;
+        case 3:
+            return CL_RGB;
+        case 4:
+            return CL_RGBA;
+        default:
+            std::unreachable();
+    }
 }
 
 }  // namespace clc
