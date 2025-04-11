@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include <CL/cl.h>
 
 namespace clc {
