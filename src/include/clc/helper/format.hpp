@@ -6,19 +6,43 @@
 
 namespace clc {
 
-[[nodiscard]] constexpr int mapClChannelOrderToBpp(cl_channel_order chanOrder) noexcept {
+[[nodiscard]] constexpr int mapClFormatToBpp(const cl_channel_order chanOrder,
+                                             const cl_channel_type chanType) noexcept {
+    int comps;
     switch (chanOrder) {
         case CL_R:
-            return 1;
+            comps = 1;
+            break;
         case CL_A:
-            return 1;
+            comps = 1;
+            break;
+        case CL_RG:
+            comps = 2;
+            break;
         case CL_RGB:
-            return 3;
+            comps = 3;
+            break;
         case CL_RGBA:
-            return 4;
+            comps = 4;
+            break;
         default:
             std::unreachable();
     }
+
+    int bpc;
+    switch (chanType) {
+        case CL_UNORM_INT8:
+            bpc = 1;
+            break;
+        case CL_FLOAT:
+            bpc = 4;
+            break;
+        default:
+            std::unreachable();
+    }
+
+    const int bpp = comps * bpc;
+    return bpp;
 };
 
 }  // namespace clc

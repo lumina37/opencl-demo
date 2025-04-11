@@ -25,7 +25,7 @@ StbImageManager::StbImageManager(const fs::path& path) {
     int width, height, oriComps;
     constexpr int comps = 4;
     image_ = (std::byte*)stbi_load(path.string().c_str(), &width, &height, &oriComps, comps);
-    extent_ = {width, height, mapStbCompsToClChannelOrder(comps)};
+    extent_ = {width, height, mapStbCompsToClChannelOrder(comps), CL_UNORM_INT8};
 }
 
 StbImageManager::StbImageManager(const Extent& extent) : extent_(extent) {

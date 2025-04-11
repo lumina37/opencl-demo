@@ -24,7 +24,7 @@ ImageManager::ImageManager(ContextManager& contextMgr, const Extent extent, cons
 
     cl_image_format imageFormat;
     imageFormat.image_channel_order = extent.clChannelOrder();
-    imageFormat.image_channel_data_type = CL_UNORM_INT8;
+    imageFormat.image_channel_data_type = extent.clChannelType();
 
     image_ = clCreateImage(context, clImageType, &imageFormat, &imageDesc, nullptr, &errCode);
     checkError(errCode);
