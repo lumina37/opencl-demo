@@ -39,7 +39,7 @@ void StbImageManager::saveTo(const fs::path& path) const {
                    (int)extent_.rowPitch());
 }
 
-cl_channel_order StbImageManager::mapStbCompsToClChannelOrder(int comps) noexcept {
+constexpr cl_channel_order StbImageManager::mapStbCompsToClChannelOrder(const int comps) noexcept {
     switch (comps) {
         case 1:
             return CL_R;
