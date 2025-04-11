@@ -26,7 +26,7 @@ int main() {
     commandBufferMgr.downloadImageTo(dstImageMgr, dstImage.getImageSpan(), dstImage.getExtent());
     commandBufferMgr.waitDownloadComplete();
 
-    float elapsedTime = (float)commandBufferMgr.getDispatchElapsedTimeNs() / (float)1e9;
+    float elapsedTime = (float)commandBufferMgr.getDispatchElapsedTimeNs() / (float)1e6;
     std::println("Dispatch elapsed time: {} ms", elapsedTime);
 
     dstImage.saveTo("out.png");

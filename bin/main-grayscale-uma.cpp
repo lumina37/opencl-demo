@@ -29,7 +29,7 @@ int main() {
     auto dstSpan = commandBufferMgr.mmapForHostRead(dstImageViewMgr, dstImage.getExtent());
     commandBufferMgr.unmap(dstImageViewMgr, dstSpan);
 
-    float elapsedTime = (float)commandBufferMgr.getDispatchElapsedTimeNs() / (float)1e9;
+    float elapsedTime = (float)commandBufferMgr.getDispatchElapsedTimeNs() / (float)1e6;
     std::println("Dispatch elapsed time: {} ms", elapsedTime);
 
     dstImage.saveTo("out.png");
