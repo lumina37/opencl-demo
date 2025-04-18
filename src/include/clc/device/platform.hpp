@@ -1,12 +1,16 @@
 #pragma once
 
+#include <expected>
+
 #include <CL/cl.h>
 
 namespace clc {
 
 class PlatformManager {
+    PlatformManager(cl_platform_id&& platform) noexcept;
+
 public:
-    PlatformManager();
+    [[nodiscard]] static std::expected<PlatformManager, cl_int> create() noexcept;
 
     [[nodiscard]] cl_platform_id getPlatform() const noexcept { return platform_; }
 

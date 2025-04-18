@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <expected>
 #include <span>
 #include <utility>
 
@@ -13,16 +14,22 @@
 namespace clc {
 
 class KernelManager {
+    KernelManager(cl_program&& program, cl_kernel&& kernel) noexcept;
+
 public:
-    KernelManager(DeviceManager& deviceMgr, ContextManager& contextMgr, std::span<std::byte> code);
-    ~KernelManager();
+    KernelManager(KernelManager&& rhs) noexcept;
+    ~KernelManager() noexcept;
+
+    [[nodiscard]] static std::expected<KernelManager, cl_int> create(DeviceManager& deviceMgr,
+                                                                     ContextManager& contextMgr,
+                                                                     std::span<std::byte> code) noexcept;
 
     template <typename Self>
     [[nodiscard]] auto&& getKernel(this Self&& self) noexcept {
         return std::forward_like<Self>(self).kernel_;
     }
 
-    void setKernelArgs(std::span<KernelArg> args);
+    [[nodiscard]] std::expected<void, cl_int> setKernelArgs(std::span<KernelArg> args) noexcept;
 
 private:
     cl_program program_;

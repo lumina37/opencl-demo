@@ -1,5 +1,7 @@
 #pragma once
 
+#include <expected>
+
 #include <CL/cl.h>
 
 #include "clc/device/device.hpp"
@@ -7,9 +9,13 @@
 namespace clc {
 
 class ContextManager {
+    ContextManager(cl_context&& context) noexcept;
+
 public:
-    ContextManager(DeviceManager& deviceMgr);
-    ~ContextManager();
+    ContextManager(ContextManager&&) noexcept;
+    ~ContextManager() noexcept;
+
+    [[nodiscard]] static std::expected<ContextManager, cl_int> create(DeviceManager& deviceMgr) noexcept;
 
     [[nodiscard]] cl_context getContext() const noexcept { return context_; }
 

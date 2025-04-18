@@ -8,9 +8,15 @@
 namespace clc {
 
 class QueueManager {
+    QueueManager(cl_command_queue&& queue) noexcept;
+
 public:
-    QueueManager(DeviceManager& deviceMgr, ContextManager& contextMgr, cl_queue_properties queueProps = 0);
-    ~QueueManager();
+    QueueManager(QueueManager&&) noexcept;
+    ~QueueManager() noexcept;
+
+    [[nodiscard]] static std::expected<QueueManager, cl_int> createWithProps(DeviceManager& deviceMgr,
+                                                                             ContextManager& contextMgr,
+                                                                             cl_queue_properties queueProps) noexcept;
 
     [[nodiscard]] cl_command_queue getQueue() const noexcept { return queue_; }
 

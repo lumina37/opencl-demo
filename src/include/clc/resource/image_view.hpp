@@ -13,9 +13,15 @@
 namespace clc {
 
 class ImageViewManager {
+    ImageViewManager(cl_mem&& image) noexcept;
+
 public:
-    ImageViewManager(ContextManager& contextMgr, Extent extent, ResourceType type, std::span<std::byte> hostMem);
-    ~ImageViewManager();
+    ImageViewManager(ImageViewManager&& rhs) noexcept;
+    ~ImageViewManager() noexcept;
+
+    [[nodiscard]] static std::expected<ImageViewManager, cl_int> create(ContextManager& contextMgr, Extent extent,
+                                                                        ResourceType type,
+                                                                        std::span<std::byte> hostMem) noexcept;
 
     [[nodiscard]] cl_mem getImage() const noexcept { return image_; }
     [[nodiscard]] KernelArg genKernelArg() noexcept { return {sizeof(image_), &image_}; }

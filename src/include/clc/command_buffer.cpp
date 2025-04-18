@@ -5,7 +5,6 @@
 
 #include "clc/device/queue.hpp"
 #include "clc/extent.hpp"
-#include "clc/helper/exception.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/command_buffer.hpp"
@@ -13,91 +12,105 @@
 
 namespace clc {
 
-CommandBufferManager::CommandBufferManager(const std::shared_ptr<QueueManager>& pQueueMgr) : pQueueMgr_(pQueueMgr) {}
+CommandBufferManager::CommandBufferManager(std::shared_ptr<QueueManager>&& pQueueMgr) noexcept
+    : pQueueMgr_(pQueueMgr) {}
 
-CommandBufferManager::~CommandBufferManager() {}
-
-void CommandBufferManager::uploadBufferFrom(BufferManager& dstBufferMgr, const std::span<std::byte> src) {
-    cl_int errCode;
-
-    uploadEvs_.emplace_back();
-    errCode = clEnqueueWriteBuffer(pQueueMgr_->getQueue(), dstBufferMgr.getBuffer(), false, 0, src.size(), src.data(),
-                                   0, nullptr, &uploadEvs_.back());
-    checkError(errCode);
+std::expected<CommandBufferManager, cl_int> CommandBufferManager::create(
+    const std::shared_ptr<QueueManager>& pQueueMgr) noexcept {
+    auto copiedPQueueMgr = pQueueMgr;
+    return CommandBufferManager{std::move(copiedPQueueMgr)};
 }
 
-void CommandBufferManager::uploadImageFrom(ImageManager& dstImageMgr, const std::span<std::byte> src,
-                                           const Extent extent) {
-    cl_int errCode;
+std::expected<void, cl_int> CommandBufferManager::uploadBufferFrom(BufferManager& dstBufferMgr,
+                                                                   const std::span<std::byte> src) noexcept {
+    preEvs_.emplace_back();
+    const cl_int clErr = clEnqueueWriteBuffer(pQueueMgr_->getQueue(), dstBufferMgr.getBuffer(), false, 0, src.size(),
+                                              src.data(), 0, nullptr, &preEvs_.back());
 
-    uploadEvs_.emplace_back();
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    return {};
+}
+
+std::expected<void, cl_int> CommandBufferManager::uploadImageFrom(ImageManager& dstImageMgr,
+                                                                  const std::span<std::byte> src,
+                                                                  const Extent extent) noexcept {
+    preEvs_.emplace_back();
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
-    errCode = clEnqueueWriteImage(pQueueMgr_->getQueue(), dstImageMgr.getImage(), false, origin.data(), region.data(),
-                                  extent.rowPitch(), 0, src.data(), 0, nullptr, &uploadEvs_.back());
-    checkError(errCode);
+    const cl_int clErr =
+        clEnqueueWriteImage(pQueueMgr_->getQueue(), dstImageMgr.getImage(), false, origin.data(), region.data(),
+                            extent.rowPitch(), 0, src.data(), 0, nullptr, &preEvs_.back());
+
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    return {};
 }
 
-void CommandBufferManager::dispatch(const KernelManager& kernelMgr, Extent extent, GroupSize localGroupSize) {
-    cl_int errCode;
-
+std::expected<void, cl_int> CommandBufferManager::dispatch(const KernelManager& kernelMgr, Extent extent,
+                                                           GroupSize localGroupSize) noexcept {
     const GroupSize globalGroupSize{(extent.width() + localGroupSize.x - 1) / localGroupSize.x * localGroupSize.x,
                                     (extent.height() + localGroupSize.y - 1) / localGroupSize.y * localGroupSize.y};
-    errCode =
+    const cl_int clErr =
         clEnqueueNDRangeKernel(pQueueMgr_->getQueue(), kernelMgr.getKernel(), 2, nullptr, (size_t*)&globalGroupSize,
-                               (size_t*)&localGroupSize, uploadEvs_.size(), uploadEvs_.data(), &dispatchEv_);
-    checkError(errCode);
+                               (size_t*)&localGroupSize, preEvs_.size(), preEvs_.data(), &dispatchEv_);
+
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    return {};
 }
 
-void CommandBufferManager::downloadImageTo(const ImageManager& srcImageMgr, std::span<std::byte> dst,
-                                           const Extent extent) {
-    cl_int errCode;
-
-    downloadEvs_.emplace_back();
+std::expected<void, cl_int> CommandBufferManager::downloadImageTo(const ImageManager& srcImageMgr,
+                                                                  std::span<std::byte> dst,
+                                                                  const Extent extent) noexcept {
+    postEvs_.emplace_back();
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
-    errCode = clEnqueueReadImage(pQueueMgr_->getQueue(), srcImageMgr.getImage(), false, origin.data(), region.data(),
-                                 extent.rowPitch(), 0, dst.data(), 1, &dispatchEv_, &downloadEvs_.back());
-    checkError(errCode);
+    const cl_int clErr =
+        clEnqueueReadImage(pQueueMgr_->getQueue(), srcImageMgr.getImage(), false, origin.data(), region.data(),
+                           extent.rowPitch(), 0, dst.data(), 1, &dispatchEv_, &postEvs_.back());
+
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    return {};
 }
 
-void CommandBufferManager::waitDownloadComplete() {
-    cl_int errCode = clWaitForEvents(downloadEvs_.size(), downloadEvs_.data());
-    checkError(errCode);
+std::expected<void, cl_int> CommandBufferManager::waitTransferComplete() noexcept {
+    const cl_int clErr = clWaitForEvents(postEvs_.size(), postEvs_.data());
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    return {};
 }
 
-std::span<std::byte> CommandBufferManager::mmapForHostRead(ImageViewManager& imageViewMgr, const Extent extent) {
-    cl_int errCode;
+std::expected<std::span<std::byte>, cl_int> CommandBufferManager::mmapForHostRead(ImageViewManager& imageViewMgr,
+                                                                                  const Extent extent) noexcept {
+    cl_int clErr;
 
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
     size_t rowPitch;
     const void* mapPtr =
         clEnqueueMapImage(pQueueMgr_->getQueue(), imageViewMgr.getImage(), true, CL_MAP_READ, origin.data(),
-                          region.data(), &rowPitch, nullptr, 1, &dispatchEv_, nullptr, &errCode);
-    checkError(errCode);
+                          region.data(), &rowPitch, nullptr, 1, &dispatchEv_, nullptr, &clErr);
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
 
     const std::span mapSpan{(std::byte*)mapPtr, extent.size()};
     return mapSpan;
 }
 
-void CommandBufferManager::unmap(ImageViewManager& imageViewMgr, const std::span<std::byte> mapSpan) {
-    cl_int errCode =
+std::expected<void, cl_int> CommandBufferManager::unmap(ImageViewManager& imageViewMgr,
+                                                        const std::span<std::byte> mapSpan) noexcept {
+    const cl_int clErr =
         clEnqueueUnmapMemObject(pQueueMgr_->getQueue(), imageViewMgr.getImage(), mapSpan.data(), 0, nullptr, nullptr);
-    checkError(errCode);
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    return {};
 }
 
-cl_ulong CommandBufferManager::getDispatchElapsedTimeNs() const {
-    cl_int errCode;
+std::expected<cl_ulong, cl_int> CommandBufferManager::getDispatchElapsedTimeNs() const noexcept {
+    cl_int clErr;
 
     cl_ulong time_start;
     cl_ulong time_end;
 
-    errCode =
-        clGetEventProfilingInfo(dispatchEv_, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, nullptr);
-    checkError(errCode);
-    errCode = clGetEventProfilingInfo(dispatchEv_, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, nullptr);
-    checkError(errCode);
+    clErr = clGetEventProfilingInfo(dispatchEv_, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, nullptr);
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    clErr = clGetEventProfilingInfo(dispatchEv_, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, nullptr);
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
 
     cl_ulong timecostNs = time_end - time_start;
     return timecostNs;

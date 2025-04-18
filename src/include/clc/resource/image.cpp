@@ -1,8 +1,10 @@
+#include <expected>
+#include <utility>
+
 #include <CL/cl.h>
 
 #include "clc/device/context.hpp"
 #include "clc/extent.hpp"
-#include "clc/helper/exception.hpp"
 #include "clc/resource/type.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
@@ -11,8 +13,19 @@
 
 namespace clc {
 
-ImageManager::ImageManager(ContextManager& contextMgr, const Extent extent, const ResourceType type) {
-    cl_int errCode;
+ImageManager::ImageManager(cl_mem&& image) noexcept : image_(image) {}
+
+ImageManager::ImageManager(ImageManager&& rhs) noexcept { image_ = std::exchange(rhs.image_, nullptr); }
+
+ImageManager::~ImageManager() noexcept {
+    if (image_ == nullptr) return;
+    clReleaseMemObject(image_);
+    image_ = nullptr;
+}
+
+std::expected<ImageManager, cl_int> ImageManager::create(ContextManager& contextMgr, const Extent extent,
+                                                         const ResourceType type) noexcept {
+    cl_int clErr;
 
     auto context = contextMgr.getContext();
     const int clImageType = type == ResourceType::Read ? CL_MEM_READ_ONLY : CL_MEM_WRITE_ONLY;
@@ -26,10 +39,10 @@ ImageManager::ImageManager(ContextManager& contextMgr, const Extent extent, cons
     imageFormat.image_channel_order = extent.clChannelOrder();
     imageFormat.image_channel_data_type = extent.clChannelType();
 
-    image_ = clCreateImage(context, clImageType, &imageFormat, &imageDesc, nullptr, &errCode);
-    checkError(errCode);
-}
+    cl_mem image = clCreateImage(context, clImageType, &imageFormat, &imageDesc, nullptr, &clErr);
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
 
-ImageManager::~ImageManager() { clReleaseMemObject(image_); }
+    return ImageManager{std::move(image)};
+}
 
 }  // namespace clc

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <expected>
 #include <memory>
 #include <vector>
 
@@ -18,25 +19,33 @@ struct GroupSize {
 };
 
 class CommandBufferManager {
+    CommandBufferManager(std::shared_ptr<QueueManager>&& pQueueMgr) noexcept;
+
 public:
-    CommandBufferManager(const std::shared_ptr<QueueManager>& pQueueMgr);
-    ~CommandBufferManager();
+    [[nodiscard]] static std::expected<CommandBufferManager, cl_int> create(
+        const std::shared_ptr<QueueManager>& pQueueMgr) noexcept;
 
-    void uploadBufferFrom(BufferManager& dstBufferMgr, std::span<std::byte> src);
-    void uploadImageFrom(ImageManager& dstImageMgr, std::span<std::byte> src, Extent extent);
-    void dispatch(const KernelManager& kernelMgr, Extent extent, GroupSize localGroupSize);
-    void downloadImageTo(const ImageManager& srcImageMgr, std::span<std::byte> dst, Extent extent);
-    void waitDownloadComplete();
+    [[nodiscard]] std::expected<void, cl_int> uploadBufferFrom(BufferManager& dstBufferMgr,
+                                                               std::span<std::byte> src) noexcept;
+    [[nodiscard]] std::expected<void, cl_int> uploadImageFrom(ImageManager& dstImageMgr, std::span<std::byte> src,
+                                                              Extent extent) noexcept;
+    [[nodiscard]] std::expected<void, cl_int> dispatch(const KernelManager& kernelMgr, Extent extent,
+                                                       GroupSize localGroupSize) noexcept;
+    [[nodiscard]] std::expected<void, cl_int> downloadImageTo(const ImageManager& srcImageMgr, std::span<std::byte> dst,
+                                                              Extent extent) noexcept;
+    [[nodiscard]] std::expected<void, cl_int> waitTransferComplete() noexcept;
 
-    std::span<std::byte> mmapForHostRead(ImageViewManager& imageViewMgr, Extent extent);
-    void unmap(ImageViewManager& imageViewMgr, std::span<std::byte> mapSpan);
+    [[nodiscard]] std::expected<std::span<std::byte>, cl_int> mmapForHostRead(ImageViewManager& imageViewMgr,
+                                                                              Extent extent) noexcept;
+    [[nodiscard]] std::expected<void, cl_int> unmap(ImageViewManager& imageViewMgr,
+                                                    std::span<std::byte> mapSpan) noexcept;
 
-    [[nodiscard]] cl_ulong getDispatchElapsedTimeNs() const;
+    [[nodiscard]] std::expected<cl_ulong, cl_int> getDispatchElapsedTimeNs() const noexcept;
 
 private:
     std::shared_ptr<QueueManager> pQueueMgr_;
-    std::vector<cl_event> uploadEvs_;
-    std::vector<cl_event> downloadEvs_;
+    std::vector<cl_event> preEvs_;
+    std::vector<cl_event> postEvs_;
     cl_event dispatchEv_;
 };
 
