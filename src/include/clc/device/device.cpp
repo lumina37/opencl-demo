@@ -26,6 +26,17 @@ DeviceManager::DeviceManager(cl_platform_id&& platform, cl_device_id&& device, D
 std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_device_id device) noexcept {
     DeviceProps props;
 
+    const auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
+    if (!deviceVersionRes) return std::unexpected{deviceVersionRes.error()};
+    const auto deviceVersion = std::string_view{deviceVersionRes.value().data()};
+    constexpr size_t majorStartOffset = 7;
+    const size_t dotOffset = deviceVersion.find_first_of('.', majorStartOffset + 1);
+    const size_t secondSpaceOffset = deviceVersion.find_first_of(' ', dotOffset + 1);
+    const auto deviceVersionMajorStr = deviceVersion.substr(majorStartOffset, dotOffset - majorStartOffset);
+    const auto deviceVersionMinorStr = deviceVersion.substr(dotOffset + 1, secondSpaceOffset - dotOffset - 1);
+    props.deviceVersionMajor = std::stoi(std::string{deviceVersionMajorStr});
+    props.deviceVersionMinor = std::stoi(std::string{deviceVersionMinorStr});
+
     const auto deviceTypeRes = getDeviceInfo<cl_device_type>(device, CL_DEVICE_TYPE);
     if (!deviceTypeRes) return std::unexpected{deviceTypeRes.error()};
     props.deviceType = deviceTypeRes.value();
@@ -39,10 +50,12 @@ std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_d
     if (!maxWorkItemSizeRes) return std::unexpected{maxWorkItemSizeRes.error()};
     props.maxWorkItemSize = maxWorkItemSizeRes.value();
 
-    const auto prefferedBasicWorkGroupSizeRes =
-        getDeviceInfo<size_t>(device, CL_DEVICE_PREFERRED_WORK_GROUP_SIZE_MULTIPLE);
-    if (!prefferedBasicWorkGroupSizeRes) return std::unexpected{prefferedBasicWorkGroupSizeRes.error()};
-    props.prefferedBasicWorkGroupSize = prefferedBasicWorkGroupSizeRes.value();
+    if (props.deviceVersionMajor >= 3) {
+        const auto prefferedBasicWorkGroupSizeRes =
+            getDeviceInfo<size_t>(device, CL_DEVICE_PREFERRED_WORK_GROUP_SIZE_MULTIPLE);
+        if (!prefferedBasicWorkGroupSizeRes) return std::unexpected{prefferedBasicWorkGroupSizeRes.error()};
+        props.prefferedBasicWorkGroupSize = prefferedBasicWorkGroupSizeRes.value();
+    }
 
     const auto globalMemCacheSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_GLOBAL_MEM_CACHE_SIZE);
     if (!globalMemCacheSizeRes) return std::unexpected{globalMemCacheSizeRes.error()};
@@ -77,24 +90,16 @@ std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_d
     props.imageBaseAddrAlign = imageBaseAddrAlignRes.value();
     props.supportImageFromBuffer = props.imagePitchAlign != 0 && props.imageBaseAddrAlign != 0;
 
-    const auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
-    if (!deviceVersionRes) return std::unexpected{deviceVersionRes.error()};
-    const auto deviceVersion = std::string_view{deviceVersionRes.value().data()};
-    constexpr size_t majorStartOffset = 7;
-    const size_t dotOffset = deviceVersion.find_first_of('.', majorStartOffset + 1);
-    const size_t secondSpaceOffset = deviceVersion.find_first_of(' ', dotOffset + 1);
-    const auto deviceVersionMajorStr = deviceVersion.substr(majorStartOffset, dotOffset - majorStartOffset);
-    const auto deviceVersionMinorStr = deviceVersion.substr(dotOffset + 1, secondSpaceOffset - dotOffset - 1);
-    props.deviceVersionMajor = std::stoi(std::string{deviceVersionMajorStr});
-    props.deviceVersionMinor = std::stoi(std::string{deviceVersionMinorStr});
-
     const auto localMemTypeRes = getDeviceInfo<cl_device_local_mem_type>(device, CL_DEVICE_LOCAL_MEM_TYPE);
     if (!localMemTypeRes) return std::unexpected{localMemTypeRes.error()};
     props.realLocalMem = localMemTypeRes.value() & CL_LOCAL;
 
-    const auto supportSubGroupRes = getDeviceInfo<cl_bool>(device, CL_DEVICE_SUB_GROUP_INDEPENDENT_FORWARD_PROGRESS);
-    if (!supportSubGroupRes) return std::unexpected{supportSubGroupRes.error()};
-    props.supportSubGroup = (bool)supportSubGroupRes.value();
+    if (props.deviceVersionMajor >= 2 && props.deviceVersionMinor >= 1) {
+        const auto supportSubGroupRes =
+            getDeviceInfo<cl_bool>(device, CL_DEVICE_SUB_GROUP_INDEPENDENT_FORWARD_PROGRESS);
+        if (!supportSubGroupRes) return std::unexpected{supportSubGroupRes.error()};
+        props.supportSubGroup = (bool)supportSubGroupRes.value();
+    }
 
     const auto hostQueuePropsRes =
         getDeviceInfo<cl_command_queue_properties>(device, CL_DEVICE_QUEUE_ON_HOST_PROPERTIES);
@@ -111,9 +116,9 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
     const auto& platforms = platformsRes.value();
 
     const auto isDeviceOK = [](const cl_device_id device, const DeviceProps& props) -> std::expected<cl_bool, cl_int> {
-        const auto readWriteImageCountRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS);
-        if (!readWriteImageCountRes) return std::unexpected{readWriteImageCountRes.error()};
-        if (readWriteImageCountRes.value() == 0) return false;
+        // const auto readWriteImageCountRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS);
+        // if (!readWriteImageCountRes) return std::unexpected{readWriteImageCountRes.error()};
+        // if (readWriteImageCountRes.value() == 0) return false;
 
         return true;
     };
@@ -132,7 +137,6 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
         if (props.supportOutOfOrderQueue) score++;
 
         if (props.deviceType & CL_DEVICE_TYPE_GPU) score <<= 1;
-        if (props.deviceType & CL_DEVICE_TYPE_ACCELERATOR) score <<= 1;
 
         if constexpr (ENABLE_DEBUG) {
             const auto deviceNameRes = getDeviceInfo<char[]>(device, CL_DEVICE_NAME);
