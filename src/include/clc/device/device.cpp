@@ -77,6 +77,17 @@ std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_d
     props.imageBaseAddrAlign = imageBaseAddrAlignRes.value();
     props.supportImageFromBuffer = props.imagePitchAlign != 0 && props.imageBaseAddrAlign != 0;
 
+    const auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
+    if (!deviceVersionRes) return std::unexpected{deviceVersionRes.error()};
+    const auto deviceVersion = std::string_view{deviceVersionRes.value().data()};
+    constexpr size_t majorStartOffset = 7;
+    const size_t dotOffset = deviceVersion.find_first_of('.', majorStartOffset + 1);
+    const size_t secondSpaceOffset = deviceVersion.find_first_of(' ', dotOffset + 1);
+    const auto deviceVersionMajorStr = deviceVersion.substr(majorStartOffset, dotOffset - majorStartOffset);
+    const auto deviceVersionMinorStr = deviceVersion.substr(dotOffset + 1, secondSpaceOffset - dotOffset - 1);
+    props.deviceVersionMajor = std::stoi(std::string{deviceVersionMajorStr});
+    props.deviceVersionMinor = std::stoi(std::string{deviceVersionMinorStr});
+
     const auto localMemTypeRes = getDeviceInfo<cl_device_local_mem_type>(device, CL_DEVICE_LOCAL_MEM_TYPE);
     if (!localMemTypeRes) return std::unexpected{localMemTypeRes.error()};
     props.realLocalMem = localMemTypeRes.value() & CL_LOCAL;
@@ -136,8 +147,8 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
             if (!driverVersionRes) return std::unexpected{driverVersionRes.error()};
             const auto driverVersion = std::string_view{driverVersionRes.value().data()};
 
-            std::println("Candidate device: name={}, deviceVer={}, driverVer={}, score={}", deviceName, deviceVersion,
-                         driverVersion, score);
+            std::println("Candidate device: name={}, deviceVer={} ({}.{}), driverVer={}, score={}", deviceName,
+                         deviceVersion, props.deviceVersionMajor, props.deviceVersionMinor, driverVersion, score);
         }
 
         return score;
