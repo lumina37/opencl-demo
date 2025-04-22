@@ -16,6 +16,9 @@ public:
 
 private:
     cl_device_id device_;
+    cl_uint imagePitchAlign_ ;
+    cl_uint imageBaseAddrAlign_;
+    bool supportImageFromBuffer_;
 };
 
 }  // namespace clc
