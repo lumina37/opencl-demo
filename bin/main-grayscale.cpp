@@ -31,11 +31,14 @@ int main() {
     clc::StbImageManager srcImage = clc::StbImageManager::createFromPath("in.png") | unwrap;
     clc::StbImageManager dstImage = clc::StbImageManager::createWithExtent(srcImage.getExtent()) | unwrap;
 
-    clc::PlatformManager platformMgr = clc::PlatformManager::create() | unwrap;
-    clc::DeviceManager deviceMgr = clc::DeviceManager::create(platformMgr) | unwrap;
+    clc::DeviceManager deviceMgr = clc::DeviceManager::create() | unwrap;
     clc::ContextManager contextMgr = clc::ContextManager::create(deviceMgr) | unwrap;
+    cl_queue_properties queueProps = CL_QUEUE_PROFILING_ENABLE;
+    if (deviceMgr.getDeviceProps().supportOutOfOrderQueue) {
+        queueProps |= CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE;
+    }
     auto pQueueMgr = std::make_shared<clc::QueueManager>(
-        clc::QueueManager::createWithProps(deviceMgr, contextMgr, CL_QUEUE_PROFILING_ENABLE) | unwrap);
+        clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap);
 
     clc::ImageManager srcImageMgr =
         clc::ImageManager::create(contextMgr, srcImage.getExtent(), clc::ResourceType::Read) | unwrap;

@@ -1,15 +1,16 @@
+#include <algorithm>
 #include <expected>
-#include <memory>
 #include <print>
 #include <ranges>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include <CL/cl.h>
 
 #include "clc/common/defines.hpp"
-#include "clc/device/platform.hpp"
-#include "clc/helper/score.hpp"
+#include "clc/device/props.hpp"
+#include "clc/device/score.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/device/device.hpp"
@@ -19,86 +20,157 @@ namespace clc {
 
 namespace rgs = std::ranges;
 
-DeviceManager::DeviceManager(cl_device_id&& device) noexcept : device_(device) {}
+DeviceManager::DeviceManager(cl_platform_id&& platform, cl_device_id&& device, DeviceProps&& props) noexcept
+    : platform_(platform), device_(device), props_(props) {}
 
-std::expected<DeviceManager, cl_int> DeviceManager::create(PlatformManager& platformMgr) noexcept {
-    cl_uint clErr;
+std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_device_id device) noexcept {
+    DeviceProps props;
 
-    cl_uint deviceCount;
-    clErr = clGetDeviceIDs(platformMgr.getPlatform(), CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceCount);
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    const auto deviceTypeRes = getDeviceInfo<cl_device_type>(device, CL_DEVICE_TYPE);
+    if (!deviceTypeRes) return std::unexpected{deviceTypeRes.error()};
+    props.deviceType = deviceTypeRes.value();
 
-    auto pDevices = std::make_unique_for_overwrite<cl_device_id[]>(deviceCount);
-    clErr = clGetDeviceIDs(platformMgr.getPlatform(), CL_DEVICE_TYPE_ALL, deviceCount, pDevices.get(), nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    const auto maxWorkGroupSizeRes = getDeviceInfo<size_t>(device, CL_DEVICE_MAX_WORK_GROUP_SIZE);
+    if (!maxWorkGroupSizeRes) return std::unexpected{maxWorkGroupSizeRes.error()};
+    props.maxWorkGroupSize = maxWorkGroupSizeRes.value();
 
-    const auto isDeviceOK = [](cl_device_id device) -> std::expected<cl_bool, cl_int> {
-        cl_int clErr;
+    const auto maxWorkItemSizeRes =
+        getDeviceInfo<decltype(props.maxWorkItemSize)>(device, CL_DEVICE_MAX_WORK_ITEM_SIZES);
+    if (!maxWorkItemSizeRes) return std::unexpected{maxWorkItemSizeRes.error()};
+    props.maxWorkItemSize = maxWorkItemSizeRes.value();
 
-        cl_bool deviceAvaliable;
-        clErr = clGetDeviceInfo(device, CL_DEVICE_AVAILABLE, sizeof(deviceAvaliable), &deviceAvaliable, nullptr);
-        if (clErr != CL_SUCCESS) return std::unexpected{clErr};
-        if (deviceAvaliable == false) return false;
+    const auto prefferedBasicWorkGroupSizeRes =
+        getDeviceInfo<size_t>(device, CL_DEVICE_PREFERRED_WORK_GROUP_SIZE_MULTIPLE);
+    if (!prefferedBasicWorkGroupSizeRes) return std::unexpected{prefferedBasicWorkGroupSizeRes.error()};
+    props.prefferedBasicWorkGroupSize = prefferedBasicWorkGroupSizeRes.value();
 
-        cl_bool imageSupport;
-        clErr = clGetDeviceInfo(device, CL_DEVICE_IMAGE_SUPPORT, sizeof(imageSupport), &imageSupport, nullptr);
-        if (clErr != CL_SUCCESS) return std::unexpected{clErr};
-        if (imageSupport == false) return false;
+    const auto globalMemCacheSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_GLOBAL_MEM_CACHE_SIZE);
+    if (!globalMemCacheSizeRes) return std::unexpected{globalMemCacheSizeRes.error()};
+    props.globalMemCacheSize = globalMemCacheSizeRes.value();
 
-        cl_uint readWriteImageCount;
-        clErr = clGetDeviceInfo(device, CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS, sizeof(readWriteImageCount),
-                                &readWriteImageCount, nullptr);
-        if (clErr != CL_SUCCESS) return std::unexpected{clErr};
-        if (readWriteImageCount == 0) return false;
+    const auto globalMemSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_GLOBAL_MEM_SIZE);
+    if (!globalMemSizeRes) return std::unexpected{globalMemSizeRes.error()};
+    props.globalMemSize = globalMemSizeRes.value();
+
+    const auto maxConstBufferSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE);
+    if (!maxConstBufferSizeRes) return std::unexpected{maxConstBufferSizeRes.error()};
+    props.maxConstBufferSize = maxConstBufferSizeRes.value();
+
+    const auto localMemSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_LOCAL_MEM_SIZE);
+    if (!localMemSizeRes) return std::unexpected{localMemSizeRes.error()};
+    props.localMemSize = localMemSizeRes.value();
+
+    const auto maxComputeUnitsRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_MAX_COMPUTE_UNITS);
+    if (!maxComputeUnitsRes) return std::unexpected{maxComputeUnitsRes.error()};
+    props.maxComputeUnits = maxComputeUnitsRes.value();
+
+    const auto globalMemCachelineSizeRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE);
+    if (!globalMemCachelineSizeRes) return std::unexpected{globalMemCachelineSizeRes.error()};
+    props.globalMemCachelineSize = globalMemCachelineSizeRes.value();
+
+    const auto imagePitchAlignRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_IMAGE_PITCH_ALIGNMENT);
+    if (!imagePitchAlignRes) return std::unexpected{imagePitchAlignRes.error()};
+    props.imagePitchAlign = imagePitchAlignRes.value();
+
+    const auto imageBaseAddrAlignRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_IMAGE_BASE_ADDRESS_ALIGNMENT);
+    if (!imageBaseAddrAlignRes) return std::unexpected{imageBaseAddrAlignRes.error()};
+    props.imageBaseAddrAlign = imageBaseAddrAlignRes.value();
+    props.supportImageFromBuffer = props.imagePitchAlign != 0 && props.imageBaseAddrAlign != 0;
+
+    const auto localMemTypeRes = getDeviceInfo<cl_device_local_mem_type>(device, CL_DEVICE_LOCAL_MEM_TYPE);
+    if (!localMemTypeRes) return std::unexpected{localMemTypeRes.error()};
+    props.realLocalMem = localMemTypeRes.value() & CL_LOCAL;
+
+    const auto supportSubGroupRes = getDeviceInfo<cl_bool>(device, CL_DEVICE_SUB_GROUP_INDEPENDENT_FORWARD_PROGRESS);
+    if (!supportSubGroupRes) return std::unexpected{supportSubGroupRes.error()};
+    props.supportSubGroup = (bool)supportSubGroupRes.value();
+
+    const auto hostQueuePropsRes =
+        getDeviceInfo<cl_command_queue_properties>(device, CL_DEVICE_QUEUE_ON_HOST_PROPERTIES);
+    if (!hostQueuePropsRes) return std::unexpected{hostQueuePropsRes.error()};
+    const auto& hostQueueProps = hostQueuePropsRes.value();
+    props.supportOutOfOrderQueue = bool(hostQueueProps & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
+
+    return props;
+}
+
+std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
+    const auto platformsRes = getPlatformIDs();
+    if (!platformsRes) return std::unexpected{platformsRes.error()};
+    const auto& platforms = platformsRes.value();
+
+    const auto isDeviceOK = [](const cl_device_id device, const DeviceProps& props) -> std::expected<cl_bool, cl_int> {
+        const auto readWriteImageCountRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS);
+        if (!readWriteImageCountRes) return std::unexpected{readWriteImageCountRes.error()};
+        if (readWriteImageCountRes.value() == 0) return false;
 
         return true;
     };
 
-    const auto getDeviceScore = [](cl_device_id device) -> std::expected<int64_t, cl_int> {
-        cl_int clErr;
+    const auto getDeviceScore = [](const cl_device_id device,
+                                   const DeviceProps& props) -> std::expected<int64_t, cl_int> {
         int64_t score = 0;
 
-        cl_command_queue_properties hostQueueProps;
-        clErr = clGetDeviceInfo(device, CL_DEVICE_QUEUE_ON_HOST_PROPERTIES, sizeof(hostQueueProps), &hostQueueProps,
-                                nullptr);
-        if (clErr != CL_SUCCESS) return std::unexpected{clErr};
-        if (hostQueueProps & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE) score++;
+        const auto deviceExtRes = getDeviceInfo<char[]>(device, CL_DEVICE_EXTENSIONS);
+        if (!deviceExtRes) return std::unexpected{deviceExtRes.error()};
+        const auto deviceExt = std::string_view{deviceExtRes.value().data()};
+        score = rgs::count(deviceExt, ' ');
 
-        cl_command_queue_properties deviceQueueProps;
-        clErr = clGetDeviceInfo(device, CL_DEVICE_QUEUE_ON_DEVICE_PROPERTIES, sizeof(deviceQueueProps),
-                                &deviceQueueProps, nullptr);
-        if (clErr != CL_SUCCESS) return std::unexpected{clErr};
-        if (deviceQueueProps & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE) score++;
+        if (props.realLocalMem) score++;
+        if (props.supportSubGroup) score++;
+        if (props.supportOutOfOrderQueue) score++;
 
-        cl_device_svm_capabilities svmProps;
-        clErr = clGetDeviceInfo(device, CL_DEVICE_SVM_CAPABILITIES, sizeof(svmProps), &svmProps, nullptr);
-        if (clErr != CL_SUCCESS) return std::unexpected{clErr};
-        if (svmProps & CL_DEVICE_SVM_COARSE_GRAIN_BUFFER) score++;
-        if (svmProps & CL_DEVICE_SVM_FINE_GRAIN_BUFFER) score++;
-        if (svmProps & CL_DEVICE_SVM_FINE_GRAIN_SYSTEM) score++;
+        if (props.deviceType & CL_DEVICE_TYPE_GPU) score <<= 1;
+        if (props.deviceType & CL_DEVICE_TYPE_ACCELERATOR) score <<= 1;
+
+        if constexpr (ENABLE_DEBUG) {
+            const auto deviceNameRes = getDeviceInfo<char[]>(device, CL_DEVICE_NAME);
+            if (!deviceNameRes) return std::unexpected{deviceNameRes.error()};
+            const auto deviceName = std::string_view{deviceNameRes.value().data()};
+
+            const auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
+            if (!deviceVersionRes) return std::unexpected{deviceVersionRes.error()};
+            const auto deviceVersion = std::string_view{deviceVersionRes.value().data()};
+
+            const auto driverVersionRes = getDeviceInfo<char[]>(device, CL_DRIVER_VERSION);
+            if (!driverVersionRes) return std::unexpected{driverVersionRes.error()};
+            const auto driverVersion = std::string_view{driverVersionRes.value().data()};
+
+            std::println("Candidate device: name={}, deviceVer={}, driverVer={}, score={}", deviceName, deviceVersion,
+                         driverVersion, score);
+        }
 
         return score;
     };
 
-    std::vector<Score<int>> scores;
-    scores.reserve(deviceCount);
-    for (const int idx : rgs::views::iota(0, (int)deviceCount)) {
-        cl_device_id device = pDevices[idx];
+    std::vector<Score<std::tuple<cl_platform_id, cl_device_id, DeviceProps>>> scores;
+    for (const auto& platform : platforms) {
+        const auto devicesRes = getDeviceIDs(platform);
+        if (!devicesRes) return std::unexpected{devicesRes.error()};
 
-        auto okRes = isDeviceOK(device);
-        if (!okRes) return std::unexpected{okRes.error()};
-        if (!okRes.value()) continue;
+        const auto& devices = devicesRes.value();
+        for (const auto& device : devices) {
+            auto devicePropsRes = queryProps(device);
+            if (!devicePropsRes) return std::unexpected{devicePropsRes.error()};
+            const auto& deviceProps = devicePropsRes.value();
 
-        auto scoreRes = getDeviceScore(device);
-        if (!scoreRes) return std::unexpected{scoreRes.error()};
-        scores.emplace_back(scoreRes.value(), idx);
+            auto okRes = isDeviceOK(device, deviceProps);
+            if (!okRes) return std::unexpected{okRes.error()};
+            if (!okRes.value()) continue;
+
+            auto scoreRes = getDeviceScore(device, deviceProps);
+            if (!scoreRes) return std::unexpected{scoreRes.error()};
+            scores.emplace_back(scoreRes.value(), std::tuple{platform, device, deviceProps});
+        }
+    }
+
+    if (scores.empty()) {
+        return std::unexpected{-1};
     }
 
     const auto maxScoreIt = std::max_element(scores.begin(), scores.end());
-    const size_t deviceIdx = maxScoreIt->attachment;
-
-    cl_device_id device = pDevices[deviceIdx];
-    return DeviceManager{std::move(device)};
+    auto [platform, device, props] = maxScoreIt->attachment;
+    return DeviceManager{std::move(platform), std::move(device), std::move(props)};
 }
 
 }  // namespace clc
