@@ -35,9 +35,11 @@ public:
                                                               Extent extent) noexcept;
     [[nodiscard]] std::expected<void, cl_int> waitTransferComplete() noexcept;
 
-    [[nodiscard]] std::expected<std::span<std::byte>, cl_int> mmapForHostRead(ImageViewManager& imageViewMgr,
+    [[nodiscard]] std::expected<std::span<std::byte>, cl_int> mmapForHostRead(ImageManager& imageMgr,
                                                                               Extent extent) noexcept;
-    [[nodiscard]] std::expected<void, cl_int> unmap(ImageViewManager& imageViewMgr,
+    [[nodiscard]] std::expected<std::span<std::byte>, cl_int> mmapForHostWrite(ImageManager& imageMgr,
+                                                                               Extent extent) noexcept;
+    [[nodiscard]] std::expected<void, cl_int> unmap(ImageManager& imageMgr,
                                                     std::span<std::byte> mapSpan) noexcept;
 
     [[nodiscard]] std::expected<cl_ulong, cl_int> getDispatchElapsedTimeNs() const noexcept;

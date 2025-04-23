@@ -77,26 +77,43 @@ std::expected<void, cl_int> CommandBufferManager::waitTransferComplete() noexcep
     return {};
 }
 
-std::expected<std::span<std::byte>, cl_int> CommandBufferManager::mmapForHostRead(ImageViewManager& imageViewMgr,
+std::expected<std::span<std::byte>, cl_int> CommandBufferManager::mmapForHostRead(ImageManager& imageMgr,
                                                                                   const Extent extent) noexcept {
     cl_int clErr;
 
+    preEvs_.emplace_back();
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
     size_t rowPitch;
     const void* mapPtr =
-        clEnqueueMapImage(pQueueMgr_->getQueue(), imageViewMgr.getImage(), true, CL_MAP_READ, origin.data(),
-                          region.data(), &rowPitch, nullptr, 1, &dispatchEv_, nullptr, &clErr);
+        clEnqueueMapImage(pQueueMgr_->getQueue(), imageMgr.getImage(), true, CL_MAP_READ, origin.data(), region.data(),
+                          &rowPitch, nullptr, 1, &dispatchEv_, nullptr, &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{clErr};
 
     const std::span mapSpan{(std::byte*)mapPtr, extent.size()};
     return mapSpan;
 }
 
-std::expected<void, cl_int> CommandBufferManager::unmap(ImageViewManager& imageViewMgr,
+std::expected<std::span<std::byte>, cl_int> CommandBufferManager::mmapForHostWrite(ImageManager& imageMgr,
+                                                                                   const Extent extent) noexcept {
+    cl_int clErr;
+
+    const std::array<size_t, 3> origin{0, 0, 0};
+    const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
+    size_t rowPitch;
+    const void* mapPtr =
+        clEnqueueMapImage(pQueueMgr_->getQueue(), imageMgr.getImage(), true, CL_MAP_WRITE, origin.data(), region.data(),
+                          &rowPitch, nullptr, 0, nullptr, nullptr, &clErr);
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+
+    const std::span mapSpan{(std::byte*)mapPtr, extent.size()};
+    return mapSpan;
+}
+
+std::expected<void, cl_int> CommandBufferManager::unmap(ImageManager& imageMgr,
                                                         const std::span<std::byte> mapSpan) noexcept {
     const cl_int clErr =
-        clEnqueueUnmapMemObject(pQueueMgr_->getQueue(), imageViewMgr.getImage(), mapSpan.data(), 0, nullptr, nullptr);
+        clEnqueueUnmapMemObject(pQueueMgr_->getQueue(), imageMgr.getImage(), mapSpan.data(), 0, nullptr, nullptr);
     if (clErr != CL_SUCCESS) return std::unexpected{clErr};
     return {};
 }

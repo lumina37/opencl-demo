@@ -27,8 +27,7 @@ std::expected<ImageManager, cl_int> ImageManager::create(ContextManager& context
                                                          const ResourceType type) noexcept {
     cl_int clErr;
 
-    auto context = contextMgr.getContext();
-    const int clImageType = type == ResourceType::Read ? CL_MEM_READ_ONLY : CL_MEM_WRITE_ONLY;
+    const cl_mem_flags memType = type == ResourceType::Read ? CL_MEM_READ_ONLY : CL_MEM_WRITE_ONLY;
 
     cl_image_desc imageDesc{};
     imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
@@ -39,7 +38,52 @@ std::expected<ImageManager, cl_int> ImageManager::create(ContextManager& context
     imageFormat.image_channel_order = extent.clChannelOrder();
     imageFormat.image_channel_data_type = extent.clChannelType();
 
-    cl_mem image = clCreateImage(context, clImageType, &imageFormat, &imageDesc, nullptr, &clErr);
+    auto context = contextMgr.getContext();
+    cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, nullptr, &clErr);
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+
+    return ImageManager{std::move(image)};
+}
+
+std::expected<ImageManager, cl_int> ImageManager::createUmaRead(ContextManager& contextMgr, Extent extent,
+                                                                std::span<std::byte> hostMem) noexcept {
+    cl_int clErr;
+
+    auto context = contextMgr.getContext();
+    constexpr cl_mem_flags memType = CL_MEM_ALLOC_HOST_PTR | CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY;
+
+    cl_image_desc imageDesc{};
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = extent.width();
+    imageDesc.image_height = extent.height();
+    imageDesc.image_row_pitch = extent.rowPitch();
+
+    cl_image_format imageFormat;
+    imageFormat.image_channel_order = extent.clChannelOrder();
+    imageFormat.image_channel_data_type = extent.clChannelType();
+
+    cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, hostMem.data(), &clErr);
+    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+
+    return ImageManager{std::move(image)};
+}
+
+std::expected<ImageManager, cl_int> ImageManager::createUmaWrite(ContextManager& contextMgr, Extent extent) noexcept {
+    cl_int clErr;
+
+    auto context = contextMgr.getContext();
+    constexpr cl_mem_flags memType = CL_MEM_ALLOC_HOST_PTR | CL_MEM_WRITE_ONLY;
+
+    cl_image_desc imageDesc{};
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = extent.width();
+    imageDesc.image_height = extent.height();
+
+    cl_image_format imageFormat;
+    imageFormat.image_channel_order = extent.clChannelOrder();
+    imageFormat.image_channel_data_type = extent.clChannelType();
+
+    cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, nullptr, &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{clErr};
 
     return ImageManager{std::move(image)};

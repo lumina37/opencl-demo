@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <expected>
 #include <format>
@@ -44,23 +45,19 @@ int main() {
     auto pQueueMgr = std::make_shared<clc::QueueManager>(
         clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap);
 
-    clc::ImageViewManager srcImageViewMgr =
-        clc::ImageViewManager::create(contextMgr, srcImage.getExtent(), clc::ResourceType::Read,
-                                      srcImage.getImageSpan()) |
-        unwrap;
-    clc::ImageViewManager dstImageViewMgr =
-        clc::ImageViewManager::create(contextMgr, dstImage.getExtent(), clc::ResourceType::Write,
-                                      dstImage.getImageSpan()) |
-        unwrap;
+    clc::ImageManager srcImageMgr =
+        clc::ImageManager::createUmaRead(contextMgr, srcImage.getExtent(), srcImage.getImageSpan()) | unwrap;
+    clc::ImageManager dstImageMgr = clc::ImageManager::createUmaWrite(contextMgr, dstImage.getExtent()) | unwrap;
 
     clc::KernelManager kernelMgr = clc::KernelManager::create(deviceMgr, contextMgr, kernel::grayscaleOclCode) | unwrap;
-    std::array kernelArgs = clc::genKernelArgs(srcImageViewMgr, dstImageViewMgr);
+    std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
     kernelMgr.setKernelArgs(kernelArgs) | unwrap;
     clc::CommandBufferManager commandBufferMgr = clc::CommandBufferManager::create(pQueueMgr) | unwrap;
 
     commandBufferMgr.dispatch(kernelMgr, dstImage.getExtent(), {16, 16}) | unwrap;
-    auto dstSpan = commandBufferMgr.mmapForHostRead(dstImageViewMgr, dstImage.getExtent()) | unwrap;
-    commandBufferMgr.unmap(dstImageViewMgr, dstSpan) | unwrap;
+    auto dstSpan = commandBufferMgr.mmapForHostRead(dstImageMgr, dstImage.getExtent()) | unwrap;
+    std::copy(dstSpan.begin(), dstSpan.end(), dstImage.getImageSpan().begin());
+    commandBufferMgr.unmap(dstImageMgr, dstSpan) | unwrap;
 
     float elapsedTime = (float)commandBufferMgr.getDispatchElapsedTimeNs().value() / (float)1e6;
     std::println("Dispatch elapsed time: {} ms", elapsedTime);
