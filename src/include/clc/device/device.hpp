@@ -2,6 +2,8 @@
 
 #include <array>
 #include <cstddef>
+#include <set>
+#include <string>
 
 #include <CL/cl.h>
 
@@ -30,6 +32,12 @@ public:
         bool supportOutOfOrderQueue;
         bool supportReadWriteImage;
         bool supportImageFromBuffer;
+        std::string extensionStr;
+        std::set<std::string_view> extensions;
+
+        DeviceProps() noexcept = default;
+        DeviceProps(const DeviceProps&) = delete;
+        DeviceProps(DeviceProps&&) noexcept = default;
     };
 
 private:
@@ -42,6 +50,7 @@ public:
 
     [[nodiscard]] cl_device_id getDevice() const noexcept { return device_; }
     [[nodiscard]] const DeviceProps& getDeviceProps() const noexcept { return props_; }
+    [[nodiscard]] bool hasExtension(std::string_view extName) const noexcept;
 
 private:
     cl_platform_id platform_;

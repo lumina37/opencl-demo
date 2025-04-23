@@ -22,7 +22,7 @@ namespace clc {
 namespace rgs = std::ranges;
 
 DeviceManager::DeviceManager(cl_platform_id&& platform, cl_device_id&& device, DeviceProps&& props) noexcept
-    : platform_(platform), device_(device), props_(props) {}
+    : platform_(platform), device_(device), props_(std::move(props)) {}
 
 std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_device_id device) noexcept {
     DeviceProps props;
@@ -140,6 +140,15 @@ std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_d
         props.supportReadWriteImage = (bool)readWriteImageCountRes.value();
     }
 
+    const auto deviceExtRes = getDeviceInfo<char[]>(device, CL_DEVICE_EXTENSIONS);
+    if (!deviceExtRes) return std::unexpected{deviceExtRes.error()};
+    props.extensionStr = std::string{deviceExtRes.value().data()};
+    props.extensions =
+        props.extensionStr | rgs::views::split(' ') |
+        rgs::views::filter([](const auto& subRange) { return !subRange.empty(); }) |
+        rgs::views::transform([](const auto& subRange) { return std::string_view{subRange.begin(), subRange.end()}; }) |
+        rgs::to<std::set>();
+
     return props;
 }
 
@@ -160,12 +169,7 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
 
     const auto getDeviceScore = [](const cl_device_id device,
                                    const DeviceProps& props) -> std::expected<int64_t, cl_int> {
-        int64_t score = 0;
-
-        const auto deviceExtRes = getDeviceInfo<char[]>(device, CL_DEVICE_EXTENSIONS);
-        if (!deviceExtRes) return std::unexpected{deviceExtRes.error()};
-        const auto deviceExt = std::string_view{deviceExtRes.value().data()};
-        score = rgs::count(deviceExt, ' ');
+        int64_t score = (int64_t)props.extensions.size();
 
         if (props.realLocalMem) score++;
         if (props.supportSubGroup) score++;
@@ -188,7 +192,7 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
 
             std::println("Candidate device: name={}, deviceVer={} ({}.{}), driverVer={}, score={}", deviceName,
                          deviceVersion, props.deviceVersionMajor, props.deviceVersionMinor, driverVersion, score);
-            std::println("Extensions: {}", deviceExt);
+            std::println("Extensions: {}", props.extensions);
         }
 
         return score;
@@ -203,7 +207,7 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
         for (const auto& device : devices) {
             auto devicePropsRes = queryProps(device);
             if (!devicePropsRes) return std::unexpected{devicePropsRes.error()};
-            const auto& deviceProps = devicePropsRes.value();
+            auto deviceProps = std::move(devicePropsRes.value());
 
             auto okRes = isDeviceOK(device, deviceProps);
             if (!okRes) return std::unexpected{okRes.error()};
@@ -211,7 +215,7 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
 
             auto scoreRes = getDeviceScore(device, deviceProps);
             if (!scoreRes) return std::unexpected{scoreRes.error()};
-            scores.emplace_back(scoreRes.value(), std::tuple{platform, device, deviceProps});
+            scores.emplace_back(scoreRes.value(), std::tuple{platform, device, std::move(deviceProps)});
         }
     }
 
@@ -219,9 +223,13 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
         return std::unexpected{1};
     }
 
-    const auto maxScoreIt = std::max_element(scores.begin(), scores.end());
-    auto [platform, device, props] = maxScoreIt->attachment;
+    auto maxScoreIt = std::max_element(scores.begin(), scores.end());
+    auto [platform, device, props] = std::move(maxScoreIt->attachment);
     return DeviceManager{std::move(platform), std::move(device), std::move(props)};
+}
+
+bool DeviceManager::hasExtension(std::string_view extName) const noexcept {
+    return props_.extensions.contains(extName);
 }
 
 }  // namespace clc
