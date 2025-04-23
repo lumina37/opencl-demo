@@ -1,6 +1,6 @@
 #pragma once
 
-#include <array>
+#include <cstdint>
 #include <expected>
 #include <type_traits>
 #include <vector>
@@ -8,6 +8,10 @@
 #include <CL/cl.h>
 
 namespace clc {
+
+static inline constexpr uint32_t packVersion(uint16_t major, uint16_t minor) noexcept {
+    return (uint32_t)major << 16 | (uint32_t)minor;
+}
 
 std::expected<std::vector<cl_platform_id>, cl_int> getPlatformIDs() noexcept;
 

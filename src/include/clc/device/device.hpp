@@ -22,11 +22,13 @@ public:
         cl_uint globalMemCachelineSize;
         cl_uint imagePitchAlign;
         cl_uint imageBaseAddrAlign;
-        uint32_t deviceVersionMajor;
-        uint32_t deviceVersionMinor;
+        uint32_t deviceVersion;
+        uint16_t deviceVersionMajor;
+        uint16_t deviceVersionMinor;
         bool realLocalMem;
         bool supportSubGroup;
         bool supportOutOfOrderQueue;
+        bool supportReadWriteImage;
         bool supportImageFromBuffer;
     };
 

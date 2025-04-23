@@ -1,6 +1,7 @@
 #include <array>
 #include <expected>
 #include <format>
+#include <iostream>
 #include <print>
 
 #include "clc.hpp"
@@ -12,6 +13,7 @@ public:
     static friend void operator|(std::expected<void, E>&& src, const Unwrap& _) {
         if (!src.has_value()) {
             const auto errStr = std::format("Errno: {}", src.error());
+            std::println(std::cerr, "{}", errStr);
             throw std::runtime_error(errStr);
         }
     }
@@ -20,6 +22,7 @@ public:
     static friend auto operator|(std::expected<T, E>&& src, const Unwrap& _) {
         if (!src.has_value()) {
             const auto errStr = std::format("Errno: {}", src.error());
+            std::println(std::cerr, "{}", errStr);
             throw std::runtime_error(errStr);
         }
         return std::forward_like<T>(src.value());

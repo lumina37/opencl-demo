@@ -40,7 +40,7 @@ std::expected<StbImageManager, int> StbImageManager::createFromPath(const fs::pa
     constexpr int comps = 4;
 
     std::byte* image = (std::byte*)stbi_load(path.string().c_str(), &width, &height, &oriComps, comps);
-    if (image == nullptr) return std::unexpected{-1};
+    if (image == nullptr) return std::unexpected{1};
 
     Extent extent_{width, height, StbImageManager::mapStbCompsToClChannelOrder(comps), CL_UNORM_INT8};
     return StbImageManager{image, extent_};
@@ -48,7 +48,7 @@ std::expected<StbImageManager, int> StbImageManager::createFromPath(const fs::pa
 
 std::expected<StbImageManager, int> StbImageManager::createWithExtent(const Extent extent) noexcept {
     std::byte* image = (std::byte*)STBI_MALLOC(extent.size());
-    if (image == nullptr) return std::unexpected{-1};
+    if (image == nullptr) return std::unexpected{1};
 
     return StbImageManager{image, extent};
 }
@@ -57,7 +57,7 @@ std::expected<void, int> StbImageManager::saveTo(const fs::path& path) const noe
     const int stbErr = stbi_write_png(path.string().c_str(), extent_.width(), extent_.height(), extent_.bpp(), image_,
                                       (int)extent_.rowPitch());
 
-    if (stbErr == 0) return std::unexpected{-1};
+    if (stbErr == 0) return std::unexpected{1};
     return {};
 }
 
