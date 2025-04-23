@@ -32,6 +32,7 @@ public:
         bool supportOutOfOrderQueue;
         bool supportReadWriteImage;
         bool supportImageFromBuffer;
+        bool supportCoarseSVM;
         std::string extensionStr;
         std::set<std::string_view> extensions;
 

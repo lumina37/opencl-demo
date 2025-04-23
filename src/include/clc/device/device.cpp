@@ -141,6 +141,16 @@ std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_d
         props.supportReadWriteImage = (bool)readWriteImageCountRes.value();
     }
 
+    const auto svmCapsRes = getDeviceInfo<cl_device_svm_capabilities>(device, CL_DEVICE_SVM_CAPABILITIES);
+    if (!svmCapsRes) {
+        if (props.deviceVersion >= packVersion(2, 0)) {
+            return std::unexpected{svmCapsRes.error()};
+        }
+    } else {
+        const auto svmCaps = svmCapsRes.value();
+        props.supportCoarseSVM = (bool)(svmCaps & CL_DEVICE_SVM_COARSE_GRAIN_BUFFER);
+    }
+
     const auto deviceExtRes = getDeviceInfo<char[]>(device, CL_DEVICE_EXTENSIONS);
     if (!deviceExtRes) return std::unexpected{deviceExtRes.error()};
     props.extensionStr = std::string{deviceExtRes.value().data()};
