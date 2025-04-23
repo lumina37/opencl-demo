@@ -5,7 +5,6 @@
 
 #include "clc/device/context.hpp"
 #include "clc/extent.hpp"
-#include "clc/resource/type.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/resource/image.hpp"
@@ -24,10 +23,8 @@ ImageManager::~ImageManager() noexcept {
 }
 
 std::expected<ImageManager, cl_int> ImageManager::create(ContextManager& contextMgr, const Extent extent,
-                                                         const ResourceType type) noexcept {
+                                                         const cl_mem_flags memType) noexcept {
     cl_int clErr;
-
-    const cl_mem_flags memType = type == ResourceType::Read ? CL_MEM_READ_ONLY : CL_MEM_WRITE_ONLY;
 
     cl_image_desc imageDesc{};
     imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
@@ -45,7 +42,16 @@ std::expected<ImageManager, cl_int> ImageManager::create(ContextManager& context
     return ImageManager{std::move(image)};
 }
 
-std::expected<ImageManager, cl_int> ImageManager::createUmaRead(ContextManager& contextMgr, Extent extent,
+std::expected<ImageManager, cl_int> ImageManager::createWrite(ContextManager& contextMgr,
+                                                              const Extent extent) noexcept {
+    return create(contextMgr, extent, CL_MEM_WRITE_ONLY);
+}
+
+std::expected<ImageManager, cl_int> ImageManager::createRead(ContextManager& contextMgr, const Extent extent) noexcept {
+    return create(contextMgr, extent, CL_MEM_READ_ONLY);
+}
+
+std::expected<ImageManager, cl_int> ImageManager::createReadUMA(ContextManager& contextMgr, Extent extent,
                                                                 std::span<std::byte> hostMem) noexcept {
     cl_int clErr;
 
@@ -68,7 +74,7 @@ std::expected<ImageManager, cl_int> ImageManager::createUmaRead(ContextManager& 
     return ImageManager{std::move(image)};
 }
 
-std::expected<ImageManager, cl_int> ImageManager::createUmaWrite(ContextManager& contextMgr, Extent extent) noexcept {
+std::expected<ImageManager, cl_int> ImageManager::createWriteUMA(ContextManager& contextMgr, Extent extent) noexcept {
     cl_int clErr;
 
     auto context = contextMgr.getContext();

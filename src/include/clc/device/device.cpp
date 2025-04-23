@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <expected>
 #include <print>
@@ -170,32 +171,37 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
     const auto getDeviceScore = [](const cl_device_id device,
                                    const DeviceProps& props) -> std::expected<int64_t, cl_int> {
         int64_t score = (int64_t)props.extensions.size();
-
         if (props.realLocalMem) score++;
         if (props.supportSubGroup) score++;
         if (props.supportOutOfOrderQueue) score++;
-
         if (props.deviceType & CL_DEVICE_TYPE_GPU) score <<= 1;
-
-        if constexpr (ENABLE_DEBUG) {
-            const auto deviceNameRes = getDeviceInfo<char[]>(device, CL_DEVICE_NAME);
-            if (!deviceNameRes) return std::unexpected{deviceNameRes.error()};
-            const auto deviceName = std::string_view{deviceNameRes.value().data()};
-
-            const auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
-            if (!deviceVersionRes) return std::unexpected{deviceVersionRes.error()};
-            const auto deviceVersion = std::string_view{deviceVersionRes.value().data()};
-
-            const auto driverVersionRes = getDeviceInfo<char[]>(device, CL_DRIVER_VERSION);
-            if (!driverVersionRes) return std::unexpected{driverVersionRes.error()};
-            const auto driverVersion = std::string_view{driverVersionRes.value().data()};
-
-            std::println("Candidate device: name={}, deviceVer={} ({}.{}), driverVer={}, score={}", deviceName,
-                         deviceVersion, props.deviceVersionMajor, props.deviceVersionMinor, driverVersion, score);
-            std::println("Extensions: {}", props.extensions);
-        }
-
         return score;
+    };
+
+    const auto printDeviceInfo = [](const cl_device_id device, const DeviceProps& props,
+                                    const int64_t score) -> std::expected<void, cl_int> {
+        const auto rstrip = [](std::string_view str) {
+            size_t lastCh = str.find_last_not_of(' ');
+            return str.substr(0, lastCh + 1);
+        };
+
+        const auto deviceNameRes = getDeviceInfo<char[]>(device, CL_DEVICE_NAME);
+        if (!deviceNameRes) return std::unexpected{deviceNameRes.error()};
+        const auto deviceName = rstrip(std::string_view{deviceNameRes.value().data()});
+
+        const auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
+        if (!deviceVersionRes) return std::unexpected{deviceVersionRes.error()};
+        const auto deviceVersion = rstrip(std::string_view{deviceVersionRes.value().data()});
+
+        const auto driverVersionRes = getDeviceInfo<char[]>(device, CL_DRIVER_VERSION);
+        if (!driverVersionRes) return std::unexpected{driverVersionRes.error()};
+        const auto driverVersion = rstrip(std::string_view{driverVersionRes.value().data()});
+
+        std::println("Candidate device: name={}, deviceVer={} ({}.{}), driverVer={}, score={}", deviceName,
+                     deviceVersion, props.deviceVersionMajor, props.deviceVersionMinor, driverVersion, score);
+        std::println("Extensions: {}", props.extensions);
+
+        return {};
     };
 
     std::vector<Score<std::tuple<cl_platform_id, cl_device_id, DeviceProps>>> scores;
@@ -216,6 +222,11 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
             auto scoreRes = getDeviceScore(device, deviceProps);
             if (!scoreRes) return std::unexpected{scoreRes.error()};
             scores.emplace_back(scoreRes.value(), std::tuple{platform, device, std::move(deviceProps)});
+
+            if constexpr (ENABLE_DEBUG) {
+                auto printRes = printDeviceInfo(device, deviceProps, scoreRes.value());
+                if (!printRes) return std::unexpected{printRes.error()};
+            }
         }
     }
 

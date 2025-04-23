@@ -46,8 +46,8 @@ int main() {
         clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap);
 
     clc::ImageManager srcImageMgr =
-        clc::ImageManager::createUmaRead(contextMgr, srcImage.getExtent(), srcImage.getImageSpan()) | unwrap;
-    clc::ImageManager dstImageMgr = clc::ImageManager::createUmaWrite(contextMgr, dstImage.getExtent()) | unwrap;
+        clc::ImageManager::createReadUMA(contextMgr, srcImage.getExtent(), srcImage.getImageSpan()) | unwrap;
+    clc::ImageManager dstImageMgr = clc::ImageManager::createWriteUMA(contextMgr, dstImage.getExtent()) | unwrap;
 
     clc::KernelManager kernelMgr = clc::KernelManager::create(deviceMgr, contextMgr, kernel::grayscaleOclCode) | unwrap;
     std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);

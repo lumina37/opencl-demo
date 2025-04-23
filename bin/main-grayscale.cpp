@@ -40,10 +40,8 @@ int main() {
     auto pQueueMgr = std::make_shared<clc::QueueManager>(
         clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap);
 
-    clc::ImageManager srcImageMgr =
-        clc::ImageManager::create(contextMgr, srcImage.getExtent(), clc::ResourceType::Read) | unwrap;
-    clc::ImageManager dstImageMgr =
-        clc::ImageManager::create(contextMgr, dstImage.getExtent(), clc::ResourceType::Write) | unwrap;
+    clc::ImageManager srcImageMgr = clc::ImageManager::createRead(contextMgr, srcImage.getExtent()) | unwrap;
+    clc::ImageManager dstImageMgr = clc::ImageManager::createWrite(contextMgr, dstImage.getExtent()) | unwrap;
 
     clc::KernelManager kernelMgr = clc::KernelManager::create(deviceMgr, contextMgr, kernel::grayscaleOclCode) | unwrap;
     std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);

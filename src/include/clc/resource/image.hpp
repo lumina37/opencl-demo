@@ -9,7 +9,6 @@
 #include "clc/device/context.hpp"
 #include "clc/extent.hpp"
 #include "clc/kernel/structs.hpp"
-#include "clc/resource/type.hpp"
 
 namespace clc {
 
@@ -21,10 +20,14 @@ public:
     ~ImageManager() noexcept;
 
     [[nodiscard]] static std::expected<ImageManager, cl_int> create(ContextManager& contextMgr, Extent extent,
-                                                                    ResourceType type) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, cl_int> createUmaRead(ContextManager& contextMgr, Extent extent,
+                                                                    cl_mem_flags memType) noexcept;
+    [[nodiscard]] static std::expected<ImageManager, cl_int> createRead(ContextManager& contextMgr,
+                                                                        Extent extent) noexcept;
+    [[nodiscard]] static std::expected<ImageManager, cl_int> createWrite(ContextManager& contextMgr,
+                                                                         Extent extent) noexcept;
+    [[nodiscard]] static std::expected<ImageManager, cl_int> createReadUMA(ContextManager& contextMgr, Extent extent,
                                                                            std::span<std::byte> hostMem) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, cl_int> createUmaWrite(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<ImageManager, cl_int> createWriteUMA(ContextManager& contextMgr,
                                                                             Extent extent) noexcept;
 
     [[nodiscard]] cl_mem getImage() const noexcept { return image_; }
