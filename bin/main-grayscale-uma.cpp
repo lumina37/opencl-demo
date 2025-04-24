@@ -10,20 +10,15 @@
 
 class Unwrap {
 public:
-    static friend void operator|(std::expected<void, clc::Error>&& src, const Unwrap& _) {
-        if (!src.has_value()) {
-            std::println(std::cerr, "{}. clErr: {}", src.error().msg, src.error().clErr);
-            std::exit(1);
-        }
-    }
-
     template <typename T>
     static friend auto operator|(std::expected<T, clc::Error>&& src, const Unwrap& _) {
         if (!src.has_value()) {
             std::println(std::cerr, "{}. clErr: {}", src.error().msg, src.error().clErr);
-            std::exit(1);
+            std::exit(src.error().clErr);
         }
-        return std::forward_like<T>(src.value());
+        if constexpr (!std::is_void_v<T>) {
+            return std::forward_like<T>(src.value());
+        }
     }
 };
 
