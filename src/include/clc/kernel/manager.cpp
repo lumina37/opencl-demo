@@ -51,7 +51,7 @@ std::expected<KernelManager, Error> KernelManager::create(DeviceManager& deviceM
     if constexpr (ENABLE_DEBUG) {
         if (clErr != CL_SUCCESS) {
             size_t logSize;
-            clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
+            clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &logSize);
             auto pLog = std::make_unique_for_overwrite<char[]>(logSize);
             clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, logSize, pLog.get(), nullptr);
             std::println(std::cerr, "Kernel build failed: {}", pLog.get());
@@ -66,7 +66,7 @@ std::expected<KernelManager, Error> KernelManager::create(DeviceManager& deviceM
 }
 
 std::expected<void, Error> KernelManager::setKernelArgs(const std::span<KernelArg> args) noexcept {
-    for (auto [idx, arg] : rgs::views::enumerate(args)) {
+    for (const auto& [idx, arg] : rgs::views::enumerate(args)) {
         cl_int clErr = clSetKernelArg(kernel_, idx, arg.size, arg.ptr);
         if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
     }
