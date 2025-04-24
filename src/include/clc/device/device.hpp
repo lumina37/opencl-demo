@@ -2,8 +2,8 @@
 
 #include <array>
 #include <cstddef>
-#include <set>
 #include <string>
+#include <vector>
 
 #include <CL/cl.h>
 
@@ -44,7 +44,7 @@ public:
     bool supportImageFromBuffer;
     bool supportCoarseSVM;
     std::string extensionStr;
-    std::set<std::string_view> extensions;
+    std::vector<std::string_view> extensions;
 };
 
 class DeviceManager {

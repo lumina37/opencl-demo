@@ -5,7 +5,6 @@
 #include <functional>
 #include <print>
 #include <ranges>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -154,12 +153,15 @@ std::expected<DeviceProps, Error> DeviceProps::create(cl_device_id device) noexc
     props.extensions =
         props.extensionStr | rgs::views::split(' ') | rgs::views::filter(std::not_fn(rgs::empty)) |
         rgs::views::transform([](const auto& subRange) { return std::string_view{subRange.begin(), subRange.end()}; }) |
-        rgs::to<std::set>();
+        rgs::to<std::vector>();
+    rgs::sort(props.extensions);
 
     return props;
 }
 
-bool DeviceProps::hasExtension(std::string_view extName) const noexcept { return extensions.contains(extName); }
+bool DeviceProps::hasExtension(std::string_view extName) const noexcept {
+    return rgs::binary_search(extensions, extName);
+}
 
 DeviceManager::DeviceManager(cl_platform_id&& platform, cl_device_id&& device) noexcept
     : platform_(platform), device_(device) {}
