@@ -26,7 +26,7 @@ namespace rgs = std::ranges;
 DeviceManager::DeviceManager(cl_platform_id&& platform, cl_device_id&& device, DeviceProps&& props) noexcept
     : platform_(platform), device_(device), props_(std::move(props)) {}
 
-std::expected<DeviceManager::DeviceProps, Error> DeviceManager::queryProps(cl_device_id device) noexcept {
+std::expected<DeviceProps, Error> DeviceManager::queryProps(cl_device_id device) noexcept {
     DeviceProps props;
 
     auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
