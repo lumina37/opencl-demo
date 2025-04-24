@@ -55,7 +55,7 @@ std::expected<DeviceManager::DeviceProps, Error> DeviceManager::queryProps(cl_de
 
     auto prefferedBasicWorkGroupSizeRes = getDeviceInfo<size_t>(device, CL_DEVICE_PREFERRED_WORK_GROUP_SIZE_MULTIPLE);
     if (!prefferedBasicWorkGroupSizeRes) {
-        if (prefferedBasicWorkGroupSizeRes.error().clErr != CL_INVALID_VALUE ||
+        if (prefferedBasicWorkGroupSizeRes.error().code != CL_INVALID_VALUE ||
             props.deviceVersion >= packVersion(3, 0)) {
             return std::unexpected{std::move(prefferedBasicWorkGroupSizeRes.error())};
         }
@@ -89,7 +89,7 @@ std::expected<DeviceManager::DeviceProps, Error> DeviceManager::queryProps(cl_de
 
     auto imagePitchAlignRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_IMAGE_PITCH_ALIGNMENT);
     if (!imagePitchAlignRes) {
-        if (imagePitchAlignRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
+        if (imagePitchAlignRes.error().code != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
             return std::unexpected{std::move(imagePitchAlignRes.error())};
         }
     } else {
@@ -98,7 +98,7 @@ std::expected<DeviceManager::DeviceProps, Error> DeviceManager::queryProps(cl_de
 
     auto imageBaseAddrAlignRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_IMAGE_BASE_ADDRESS_ALIGNMENT);
     if (!imageBaseAddrAlignRes) {
-        if (imageBaseAddrAlignRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
+        if (imageBaseAddrAlignRes.error().code != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
             return std::unexpected{std::move(imageBaseAddrAlignRes.error())};
         }
     } else {
@@ -112,7 +112,7 @@ std::expected<DeviceManager::DeviceProps, Error> DeviceManager::queryProps(cl_de
 
     auto maxSubGroupsRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_NUM_SUB_GROUPS);
     if (!maxSubGroupsRes) {
-        if (maxSubGroupsRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
+        if (maxSubGroupsRes.error().code != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
             return std::unexpected{std::move(maxSubGroupsRes.error())};
         }
     } else {
@@ -133,7 +133,7 @@ std::expected<DeviceManager::DeviceProps, Error> DeviceManager::queryProps(cl_de
 
     auto readWriteImageCountRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS);
     if (!readWriteImageCountRes) {
-        if (readWriteImageCountRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
+        if (readWriteImageCountRes.error().code != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
             return std::unexpected{std::move(readWriteImageCountRes.error())};
         }
     } else {
@@ -142,7 +142,7 @@ std::expected<DeviceManager::DeviceProps, Error> DeviceManager::queryProps(cl_de
 
     auto svmCapsRes = getDeviceInfo<cl_device_svm_capabilities>(device, CL_DEVICE_SVM_CAPABILITIES);
     if (!svmCapsRes) {
-        if (svmCapsRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
+        if (svmCapsRes.error().code != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
             return std::unexpected{std::move(svmCapsRes.error())};
         }
     } else {

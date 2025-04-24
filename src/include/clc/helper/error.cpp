@@ -1,5 +1,3 @@
-#include <filesystem>
-#include <format>
 #include <source_location>
 #include <string>
 
@@ -11,18 +9,12 @@
 
 namespace clc {
 
-namespace fs = std::filesystem;
+Error::Error(const int code, const std::source_location& source) : code(code), source(source) {}
 
-Error::Error(const cl_int clErr, const std::source_location& srcLoc) : clErr(clErr) {
-    const fs::path absFilePath{srcLoc.file_name()};
-    const fs::path relFilePath = fs::relative(absFilePath, includeBase);
-    this->msg = std::format("{}:{}", relFilePath.string(), srcLoc.line(), clErr);
-}
+Error::Error(const int code, const std::string& msg, const std::source_location& source)
+    : code(code), source(source), msg(msg) {}
 
-Error::Error(const cl_int clErr, const std::string& msg, const std::source_location& srcLoc) : clErr(clErr) {
-    const fs::path absFilePath{srcLoc.file_name()};
-    const fs::path relFilePath = fs::relative(absFilePath, includeBase);
-    this->msg = std::format("{}:{} {}", relFilePath.string(), srcLoc.line(), clErr, msg);
-}
+Error::Error(const int code, std::string&& msg, const std::source_location& source)
+    : code(code), source(source), msg(std::move(msg)) {}
 
 }  // namespace clc

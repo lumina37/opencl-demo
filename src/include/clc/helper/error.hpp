@@ -3,17 +3,17 @@
 #include <source_location>
 #include <string>
 
-#include <CL/cl.h>
-
 namespace clc {
 
 class Error {
 public:
-    cl_int clErr;
+    int code;
+    std::source_location source;
     std::string msg;
 
-    Error(cl_int clErr, const std::source_location& srcLoc = std::source_location::current());
-    Error(cl_int clErr, const std::string& msg, const std::source_location& srcLoc = std::source_location::current());
+    Error(int code, const std::source_location& source = std::source_location::current());
+    Error(int code, const std::string& msg, const std::source_location& source = std::source_location::current());
+    Error(int code, std::string&& msg, const std::source_location& source = std::source_location::current());
     Error(const Error& rhs) = default;
     Error(Error&& rhs) noexcept = default;
 };

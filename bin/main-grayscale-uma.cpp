@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <expected>
+#include <filesystem>
 #include <format>
 #include <iostream>
 #include <print>
@@ -8,13 +9,18 @@
 #include "clc.hpp"
 #include "opencl/kernel.hpp"
 
+namespace fs = std::filesystem;
+
 class Unwrap {
 public:
     template <typename T>
     static friend auto operator|(std::expected<T, clc::Error>&& src, const Unwrap& _) {
         if (!src.has_value()) {
-            std::println(std::cerr, "{}. clErr: {}", src.error().msg, src.error().clErr);
-            std::exit(src.error().clErr);
+            const auto& err = src.error();
+            const fs::path filePath{err.source.file_name()};
+            const std::string fileName = filePath.filename().string();
+            std::println(std::cerr, "{}:{} msg={} clErr={}", fileName, err.source.line(), err.msg, err.code);
+            std::exit(err.code);
         }
         if constexpr (!std::is_void_v<T>) {
             return std::forward_like<T>(src.value());
