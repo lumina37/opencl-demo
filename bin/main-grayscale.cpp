@@ -32,9 +32,10 @@ int main() {
     clc::StbImageManager dstImage = clc::StbImageManager::createWithExtent(srcImage.getExtent()) | unwrap;
 
     clc::DeviceManager deviceMgr = clc::DeviceManager::create() | unwrap;
+    clc::DeviceProps deviceProps = clc::DeviceProps::create(deviceMgr.getDevice()) | unwrap;
     clc::ContextManager contextMgr = clc::ContextManager::create(deviceMgr) | unwrap;
     cl_queue_properties queueProps = CL_QUEUE_PROFILING_ENABLE;
-    if (deviceMgr.getDeviceProps().supportOutOfOrderQueue) {
+    if (deviceProps.supportOutOfOrderQueue) {
         queueProps |= CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE;
     }
     auto pQueueMgr = std::make_shared<clc::QueueManager>(
@@ -44,7 +45,7 @@ int main() {
     clc::ImageManager dstImageMgr = clc::ImageManager::createWrite(contextMgr, dstImage.getExtent()) | unwrap;
 
     std::span<std::byte> oclSource;
-    if (deviceMgr.hasExtension("cl_khr_fp16")) {
+    if (deviceProps.hasExtension("cl_khr_fp16")) {
         oclSource = kernel::grayscaleFp16Code;
     } else {
         oclSource = kernel::grayscaleFp32Code;
