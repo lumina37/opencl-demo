@@ -14,11 +14,11 @@ public:
     BufferManager(BufferManager&& rhs) noexcept;
     ~BufferManager() noexcept;
 
-    [[nodiscard]] static std::expected<BufferManager, cl_int> create(ContextManager& contextMgr, size_t size,
+    [[nodiscard]] static std::expected<BufferManager, Error> create(ContextManager& contextMgr, size_t size,
                                                                      cl_mem_flags memType) noexcept;
-    [[nodiscard]] static std::expected<BufferManager, cl_int> createRead(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<BufferManager, Error> createRead(ContextManager& contextMgr,
                                                                          size_t size) noexcept;
-    [[nodiscard]] static std::expected<BufferManager, cl_int> createWrite(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<BufferManager, Error> createWrite(ContextManager& contextMgr,
                                                                          size_t size) noexcept;
 
     [[nodiscard]] cl_mem getBuffer() const noexcept { return buffer_; }

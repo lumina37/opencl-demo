@@ -9,6 +9,7 @@
 
 #include "clc/device/device.hpp"
 #include "clc/helper/defines.hpp"
+#include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/kernel/manager.hpp"
@@ -35,14 +36,14 @@ KernelManager::~KernelManager() noexcept {
         program_ = nullptr;
     }
 }
-std::expected<KernelManager, cl_int> KernelManager::create(DeviceManager& deviceMgr, ContextManager& contextMgr,
-                                                           std::span<std::byte> code) noexcept {
+std::expected<KernelManager, Error> KernelManager::create(DeviceManager& deviceMgr, ContextManager& contextMgr,
+                                                          std::span<std::byte> code) noexcept {
     cl_int clErr;
 
     auto context = contextMgr.getContext();
     auto pCode = (const char*)code.data();
     cl_program program = clCreateProgramWithSource(context, 1, &pCode, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
     auto device = deviceMgr.getDevice();
     clErr = clBuildProgram(program, 1, &device, nullptr, nullptr, nullptr);
@@ -56,18 +57,18 @@ std::expected<KernelManager, cl_int> KernelManager::create(DeviceManager& device
             std::println(std::cerr, "Kernel build failed: {}", pLog.get());
         }
     }
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
     cl_kernel kernel = clCreateKernel(program, "clcmain", &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
     return KernelManager{std::move(program), std::move(kernel)};
 }
 
-std::expected<void, cl_int> KernelManager::setKernelArgs(const std::span<KernelArg> args) noexcept {
+std::expected<void, Error> KernelManager::setKernelArgs(const std::span<KernelArg> args) noexcept {
     for (auto [idx, arg] : rgs::views::enumerate(args)) {
         cl_int clErr = clSetKernelArg(kernel_, idx, arg.size, arg.ptr);
-        if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+        if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
     }
     return {};
 }

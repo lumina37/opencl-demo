@@ -13,6 +13,7 @@
 #pragma pop_macro("STB_IMAGE_WRITE_IMPLEMENTATION")
 
 #include "clc/extent.hpp"
+#include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/stb_image.hpp"
@@ -35,7 +36,7 @@ StbImageManager::~StbImageManager() noexcept {
     image_ = nullptr;
 }
 
-std::expected<StbImageManager, int> StbImageManager::createFromPath(const fs::path& path) noexcept {
+std::expected<StbImageManager, Error> StbImageManager::createFromPath(const fs::path& path) noexcept {
     int width, height, oriComps;
     constexpr int comps = 4;
 
@@ -46,14 +47,14 @@ std::expected<StbImageManager, int> StbImageManager::createFromPath(const fs::pa
     return StbImageManager{image, extent_};
 }
 
-std::expected<StbImageManager, int> StbImageManager::createWithExtent(const Extent extent) noexcept {
+std::expected<StbImageManager, Error> StbImageManager::createWithExtent(const Extent extent) noexcept {
     std::byte* image = (std::byte*)STBI_MALLOC(extent.size());
     if (image == nullptr) return std::unexpected{1};
 
     return StbImageManager{image, extent};
 }
 
-std::expected<void, int> StbImageManager::saveTo(const fs::path& path) const noexcept {
+std::expected<void, Error> StbImageManager::saveTo(const fs::path& path) const noexcept {
     const int stbErr = stbi_write_png(path.string().c_str(), extent_.width(), extent_.height(), extent_.bpp(), image_,
                                       (int)extent_.rowPitch());
 

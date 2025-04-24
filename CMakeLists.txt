@@ -26,6 +26,11 @@ function(copy_dlls_if_needed name)
     endif ()
 endfunction()
 
+set(CLC_INCLUDE_BASE ${PROJECT_SOURCE_DIR}/src/include)
+
+set(CLC_CONFIGURE_DIR "${PROJECT_SOURCE_DIR}/src/include/clc/common")
+configure_file("${CLC_CONFIGURE_DIR}/config.h.in" "${CLC_CONFIGURE_DIR}/config.h" @ONLY)
+
 # Sources
 add_subdirectory(src)
 add_subdirectory(kernel)

@@ -4,6 +4,7 @@
 #include <CL/cl.h>
 
 #include "clc/device/device.hpp"
+#include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/device/context.hpp"
@@ -21,12 +22,12 @@ ContextManager::~ContextManager() noexcept {
     context_ = nullptr;
 }
 
-std::expected<ContextManager, cl_int> ContextManager::create(DeviceManager& deviceMgr) noexcept {
+std::expected<ContextManager, Error> ContextManager::create(DeviceManager& deviceMgr) noexcept {
     cl_int clErr;
 
     auto device = deviceMgr.getDevice();
     cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
     return ContextManager{std::move(context)};
 }

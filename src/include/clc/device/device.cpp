@@ -26,11 +26,11 @@ namespace rgs = std::ranges;
 DeviceManager::DeviceManager(cl_platform_id&& platform, cl_device_id&& device, DeviceProps&& props) noexcept
     : platform_(platform), device_(device), props_(std::move(props)) {}
 
-std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_device_id device) noexcept {
+std::expected<DeviceManager::DeviceProps, Error> DeviceManager::queryProps(cl_device_id device) noexcept {
     DeviceProps props;
 
-    const auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
-    if (!deviceVersionRes) return std::unexpected{deviceVersionRes.error()};
+    auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
+    if (!deviceVersionRes) return std::unexpected{std::move(deviceVersionRes.error())};
     const auto deviceVersion = std::string_view{deviceVersionRes.value().data()};
     constexpr size_t majorStartOffset = 7;
     const size_t dotOffset = deviceVersion.find_first_of('.', majorStartOffset + 1);
@@ -41,119 +41,117 @@ std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_d
     props.deviceVersionMinor = (uint16_t)std::stoi(std::string{deviceVersionMinorStr});
     props.deviceVersion = packVersion(props.deviceVersionMajor, props.deviceVersionMinor);
 
-    const auto deviceTypeRes = getDeviceInfo<cl_device_type>(device, CL_DEVICE_TYPE);
-    if (!deviceTypeRes) return std::unexpected{deviceTypeRes.error()};
+    auto deviceTypeRes = getDeviceInfo<cl_device_type>(device, CL_DEVICE_TYPE);
+    if (!deviceTypeRes) return std::unexpected{std::move(deviceTypeRes.error())};
     props.deviceType = deviceTypeRes.value();
 
-    const auto maxWorkGroupSizeRes = getDeviceInfo<size_t>(device, CL_DEVICE_MAX_WORK_GROUP_SIZE);
-    if (!maxWorkGroupSizeRes) return std::unexpected{maxWorkGroupSizeRes.error()};
+    auto maxWorkGroupSizeRes = getDeviceInfo<size_t>(device, CL_DEVICE_MAX_WORK_GROUP_SIZE);
+    if (!maxWorkGroupSizeRes) return std::unexpected{std::move(maxWorkGroupSizeRes.error())};
     props.maxWorkGroupSize = maxWorkGroupSizeRes.value();
 
-    const auto maxWorkItemSizeRes =
-        getDeviceInfo<decltype(props.maxWorkItemSize)>(device, CL_DEVICE_MAX_WORK_ITEM_SIZES);
-    if (!maxWorkItemSizeRes) return std::unexpected{maxWorkItemSizeRes.error()};
+    auto maxWorkItemSizeRes = getDeviceInfo<decltype(props.maxWorkItemSize)>(device, CL_DEVICE_MAX_WORK_ITEM_SIZES);
+    if (!maxWorkItemSizeRes) return std::unexpected{std::move(maxWorkItemSizeRes.error())};
     props.maxWorkItemSize = maxWorkItemSizeRes.value();
 
-    const auto prefferedBasicWorkGroupSizeRes =
-        getDeviceInfo<size_t>(device, CL_DEVICE_PREFERRED_WORK_GROUP_SIZE_MULTIPLE);
+    auto prefferedBasicWorkGroupSizeRes = getDeviceInfo<size_t>(device, CL_DEVICE_PREFERRED_WORK_GROUP_SIZE_MULTIPLE);
     if (!prefferedBasicWorkGroupSizeRes) {
-        if (prefferedBasicWorkGroupSizeRes.error() != CL_INVALID_VALUE || props.deviceVersion >= packVersion(3, 0)) {
-            return std::unexpected{prefferedBasicWorkGroupSizeRes.error()};
+        if (prefferedBasicWorkGroupSizeRes.error().clErr != CL_INVALID_VALUE ||
+            props.deviceVersion >= packVersion(3, 0)) {
+            return std::unexpected{std::move(prefferedBasicWorkGroupSizeRes.error())};
         }
     } else {
         props.prefferedBasicWorkGroupSize = prefferedBasicWorkGroupSizeRes.value();
     }
 
-    const auto globalMemCacheSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_GLOBAL_MEM_CACHE_SIZE);
-    if (!globalMemCacheSizeRes) return std::unexpected{globalMemCacheSizeRes.error()};
+    auto globalMemCacheSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_GLOBAL_MEM_CACHE_SIZE);
+    if (!globalMemCacheSizeRes) return std::unexpected{std::move(globalMemCacheSizeRes.error())};
     props.globalMemCacheSize = globalMemCacheSizeRes.value();
 
-    const auto globalMemSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_GLOBAL_MEM_SIZE);
-    if (!globalMemSizeRes) return std::unexpected{globalMemSizeRes.error()};
+    auto globalMemSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_GLOBAL_MEM_SIZE);
+    if (!globalMemSizeRes) return std::unexpected{std::move(globalMemSizeRes.error())};
     props.globalMemSize = globalMemSizeRes.value();
 
-    const auto maxConstBufferSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE);
-    if (!maxConstBufferSizeRes) return std::unexpected{maxConstBufferSizeRes.error()};
+    auto maxConstBufferSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE);
+    if (!maxConstBufferSizeRes) return std::unexpected{std::move(maxConstBufferSizeRes.error())};
     props.maxConstBufferSize = maxConstBufferSizeRes.value();
 
-    const auto localMemSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_LOCAL_MEM_SIZE);
-    if (!localMemSizeRes) return std::unexpected{localMemSizeRes.error()};
+    auto localMemSizeRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_LOCAL_MEM_SIZE);
+    if (!localMemSizeRes) return std::unexpected{std::move(localMemSizeRes.error())};
     props.localMemSize = localMemSizeRes.value();
 
-    const auto maxComputeUnitsRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_MAX_COMPUTE_UNITS);
-    if (!maxComputeUnitsRes) return std::unexpected{maxComputeUnitsRes.error()};
+    auto maxComputeUnitsRes = getDeviceInfo<cl_ulong>(device, CL_DEVICE_MAX_COMPUTE_UNITS);
+    if (!maxComputeUnitsRes) return std::unexpected{std::move(maxComputeUnitsRes.error())};
     props.maxComputeUnits = maxComputeUnitsRes.value();
 
-    const auto globalMemCachelineSizeRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE);
-    if (!globalMemCachelineSizeRes) return std::unexpected{globalMemCachelineSizeRes.error()};
+    auto globalMemCachelineSizeRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE);
+    if (!globalMemCachelineSizeRes) return std::unexpected{std::move(globalMemCachelineSizeRes.error())};
     props.globalMemCachelineSize = globalMemCachelineSizeRes.value();
 
-    const auto imagePitchAlignRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_IMAGE_PITCH_ALIGNMENT);
+    auto imagePitchAlignRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_IMAGE_PITCH_ALIGNMENT);
     if (!imagePitchAlignRes) {
-        if (imagePitchAlignRes.error() != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
-            return std::unexpected{imagePitchAlignRes.error()};
+        if (imagePitchAlignRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
+            return std::unexpected{std::move(imagePitchAlignRes.error())};
         }
     } else {
         props.imagePitchAlign = imagePitchAlignRes.value();
     }
 
-    const auto imageBaseAddrAlignRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_IMAGE_BASE_ADDRESS_ALIGNMENT);
+    auto imageBaseAddrAlignRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_IMAGE_BASE_ADDRESS_ALIGNMENT);
     if (!imageBaseAddrAlignRes) {
-        if (imageBaseAddrAlignRes.error() != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
-            return std::unexpected{imageBaseAddrAlignRes.error()};
+        if (imageBaseAddrAlignRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
+            return std::unexpected{std::move(imageBaseAddrAlignRes.error())};
         }
     } else {
         props.imageBaseAddrAlign = imageBaseAddrAlignRes.value();
     }
     props.supportImageFromBuffer = props.imagePitchAlign != 0 && props.imageBaseAddrAlign != 0;
 
-    const auto localMemTypeRes = getDeviceInfo<cl_device_local_mem_type>(device, CL_DEVICE_LOCAL_MEM_TYPE);
-    if (!localMemTypeRes) return std::unexpected{localMemTypeRes.error()};
+    auto localMemTypeRes = getDeviceInfo<cl_device_local_mem_type>(device, CL_DEVICE_LOCAL_MEM_TYPE);
+    if (!localMemTypeRes) return std::unexpected{std::move(localMemTypeRes.error())};
     props.realLocalMem = localMemTypeRes.value() & CL_LOCAL;
 
-    const auto maxSubGroupsRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_NUM_SUB_GROUPS);
+    auto maxSubGroupsRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_NUM_SUB_GROUPS);
     if (!maxSubGroupsRes) {
-        if (maxSubGroupsRes.error() != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
-            return std::unexpected{maxSubGroupsRes.error()};
+        if (maxSubGroupsRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
+            return std::unexpected{std::move(maxSubGroupsRes.error())};
         }
     } else {
         props.supportSubGroup = (bool)maxSubGroupsRes.value();
     }
 
     if (props.deviceVersion >= packVersion(2, 0)) {
-        const auto hostQueuePropsRes =
-            getDeviceInfo<cl_command_queue_properties>(device, CL_DEVICE_QUEUE_ON_HOST_PROPERTIES);
-        if (!hostQueuePropsRes) return std::unexpected{hostQueuePropsRes.error()};
+        auto hostQueuePropsRes = getDeviceInfo<cl_command_queue_properties>(device, CL_DEVICE_QUEUE_ON_HOST_PROPERTIES);
+        if (!hostQueuePropsRes) return std::unexpected{std::move(hostQueuePropsRes.error())};
         const auto& hostQueueProps = hostQueuePropsRes.value();
         props.supportOutOfOrderQueue = bool(hostQueueProps & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
     } else {
-        const auto queuePropsRes = getDeviceInfo<cl_command_queue_properties>(device, CL_DEVICE_QUEUE_PROPERTIES);
-        if (!queuePropsRes) return std::unexpected{queuePropsRes.error()};
+        auto queuePropsRes = getDeviceInfo<cl_command_queue_properties>(device, CL_DEVICE_QUEUE_PROPERTIES);
+        if (!queuePropsRes) return std::unexpected{std::move(queuePropsRes.error())};
         const auto& queueProps = queuePropsRes.value();
         props.supportOutOfOrderQueue = bool(queueProps & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
     }
 
-    const auto readWriteImageCountRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS);
+    auto readWriteImageCountRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS);
     if (!readWriteImageCountRes) {
-        if (readWriteImageCountRes.error() != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
-            return std::unexpected{readWriteImageCountRes.error()};
+        if (readWriteImageCountRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
+            return std::unexpected{std::move(readWriteImageCountRes.error())};
         }
     } else {
         props.supportReadWriteImage = (bool)readWriteImageCountRes.value();
     }
 
-    const auto svmCapsRes = getDeviceInfo<cl_device_svm_capabilities>(device, CL_DEVICE_SVM_CAPABILITIES);
+    auto svmCapsRes = getDeviceInfo<cl_device_svm_capabilities>(device, CL_DEVICE_SVM_CAPABILITIES);
     if (!svmCapsRes) {
-        if (svmCapsRes.error() != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
-            return std::unexpected{svmCapsRes.error()};
+        if (svmCapsRes.error().clErr != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 0)) {
+            return std::unexpected{std::move(svmCapsRes.error())};
         }
     } else {
         const auto svmCaps = svmCapsRes.value();
         props.supportCoarseSVM = (bool)(svmCaps & CL_DEVICE_SVM_COARSE_GRAIN_BUFFER);
     }
 
-    const auto deviceExtRes = getDeviceInfo<char[]>(device, CL_DEVICE_EXTENSIONS);
-    if (!deviceExtRes) return std::unexpected{deviceExtRes.error()};
+    auto deviceExtRes = getDeviceInfo<char[]>(device, CL_DEVICE_EXTENSIONS);
+    if (!deviceExtRes) return std::unexpected{std::move(deviceExtRes.error())};
     props.extensionStr = std::string{deviceExtRes.value().data()};
     props.extensions =
         props.extensionStr | rgs::views::split(' ') | rgs::views::filter(std::not_fn(rgs::empty)) |
@@ -163,41 +161,41 @@ std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_d
     return props;
 }
 
-std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
-    const auto platformsRes = getPlatformIDs();
-    if (!platformsRes) return std::unexpected{platformsRes.error()};
+std::expected<DeviceManager, Error> DeviceManager::create() noexcept {
+    auto platformsRes = getPlatformIDs();
+    if (!platformsRes) return std::unexpected{std::move(platformsRes.error())};
     const auto& platforms = platformsRes.value();
 
-    const auto isDeviceOK = [](const cl_device_id device, const DeviceProps& props) -> std::expected<bool, cl_int> {
+    const auto isDeviceOK = [](const cl_device_id device, const DeviceProps& props) -> std::expected<bool, Error> {
         if (props.deviceVersionMajor < 2) return false;
 
-        const auto imageSupportRes = getDeviceInfo<cl_bool>(device, CL_DEVICE_IMAGE_SUPPORT);
-        if (!imageSupportRes) return std::unexpected{imageSupportRes.error()};
+        auto imageSupportRes = getDeviceInfo<cl_bool>(device, CL_DEVICE_IMAGE_SUPPORT);
+        if (!imageSupportRes) return std::unexpected{std::move(imageSupportRes.error())};
         if (imageSupportRes.value() == CL_FALSE) return false;
 
         return true;
     };
 
     const auto getDeviceScore = [](const cl_device_id device,
-                                   const DeviceProps& props) -> std::expected<int64_t, cl_int> {
+                                   const DeviceProps& props) -> std::expected<int64_t, Error> {
         int64_t score = (int64_t)props.extensions.size();
         if (props.deviceType & CL_DEVICE_TYPE_GPU) score <<= 1;
         return score;
     };
 
     const auto printDeviceInfo = [](const cl_device_id device, const DeviceProps& props,
-                                    const int64_t score) -> std::expected<void, cl_int> {
+                                    const int64_t score) -> std::expected<void, Error> {
         const auto rstrip = [](std::string_view str) {
             size_t lastCh = str.find_last_not_of(' ');
             return str.substr(0, lastCh + 1);
         };
 
-        const auto deviceNameRes = getDeviceInfo<char[]>(device, CL_DEVICE_NAME);
-        if (!deviceNameRes) return std::unexpected{deviceNameRes.error()};
+        auto deviceNameRes = getDeviceInfo<char[]>(device, CL_DEVICE_NAME);
+        if (!deviceNameRes) return std::unexpected{std::move(deviceNameRes.error())};
         const auto deviceName = rstrip(std::string_view{deviceNameRes.value().data()});
 
         const auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
-        if (!deviceVersionRes) return std::unexpected{deviceVersionRes.error()};
+        if (!deviceVersionRes) return std::unexpected{std::move(deviceVersionRes.error())};
         const auto deviceVersion = rstrip(std::string_view{deviceVersionRes.value().data()});
 
         std::println("Candidate device: name={}, ver={} ({}.{}), type={}, score={}", deviceName, deviceVersion,
@@ -209,25 +207,25 @@ std::expected<DeviceManager, cl_int> DeviceManager::create() noexcept {
 
     std::vector<Score<std::tuple<cl_platform_id, cl_device_id, DeviceProps>>> scores;
     for (const auto& platform : platforms) {
-        const auto devicesRes = getDeviceIDs(platform);
-        if (!devicesRes) return std::unexpected{devicesRes.error()};
+        auto devicesRes = getDeviceIDs(platform);
+        if (!devicesRes) return std::unexpected{std::move(devicesRes.error())};
 
         const auto& devices = devicesRes.value();
         for (const auto& device : devices) {
             auto devicePropsRes = queryProps(device);
-            if (!devicePropsRes) return std::unexpected{devicePropsRes.error()};
+            if (!devicePropsRes) return std::unexpected{std::move(devicePropsRes.error())};
             auto deviceProps = std::move(devicePropsRes.value());
 
             auto okRes = isDeviceOK(device, deviceProps);
-            if (!okRes) return std::unexpected{okRes.error()};
+            if (!okRes) return std::unexpected{std::move(okRes.error())};
             if (!okRes.value()) continue;
 
             auto scoreRes = getDeviceScore(device, deviceProps);
-            if (!scoreRes) return std::unexpected{scoreRes.error()};
+            if (!scoreRes) return std::unexpected{std::move(scoreRes.error())};
 
             if constexpr (ENABLE_DEBUG) {
                 auto printRes = printDeviceInfo(device, deviceProps, scoreRes.value());
-                if (!printRes) return std::unexpected{printRes.error()};
+                if (!printRes) return std::unexpected{std::move(printRes.error())};
             }
 
             scores.emplace_back(scoreRes.value(), std::tuple{platform, device, std::move(deviceProps)});

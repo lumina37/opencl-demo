@@ -7,6 +7,8 @@
 
 #include <CL/cl.h>
 
+#include "clc/helper/error.hpp"
+
 namespace clc {
 
 class DeviceManager {
@@ -44,10 +46,10 @@ public:
 private:
     DeviceManager(cl_platform_id&& platform, cl_device_id&& device, DeviceProps&& props) noexcept;
 
-    [[nodiscard]] static std::expected<DeviceProps, cl_int> queryProps(cl_device_id device) noexcept;
+    [[nodiscard]] static std::expected<DeviceProps, Error> queryProps(cl_device_id device) noexcept;
 
 public:
-    [[nodiscard]] static std::expected<DeviceManager, cl_int> create() noexcept;
+    [[nodiscard]] static std::expected<DeviceManager, Error> create() noexcept;
 
     [[nodiscard]] cl_device_id getDevice() const noexcept { return device_; }
     [[nodiscard]] const DeviceProps& getDeviceProps() const noexcept { return props_; }

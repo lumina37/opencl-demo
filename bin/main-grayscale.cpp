@@ -1,5 +1,5 @@
 #include <array>
-#include <format>
+#include <iostream>
 #include <print>
 
 #include "clc.hpp"
@@ -7,19 +7,18 @@
 
 class Unwrap {
 public:
-    template <typename E>
-    static friend void operator|(std::expected<void, E>&& src, const Unwrap& _) {
+    static friend void operator|(std::expected<void, clc::Error>&& src, const Unwrap& _) {
         if (!src.has_value()) {
-            const auto errStr = std::format("Errno: {}", src.error());
-            throw std::runtime_error(errStr);
+            std::println(std::cerr, "{}. clErr: {}", src.error().msg, src.error().clErr);
+            std::exit(1);
         }
     }
 
-    template <typename T, typename E>
-    static friend auto operator|(std::expected<T, E>&& src, const Unwrap& _) {
+    template <typename T>
+    static friend auto operator|(std::expected<T, clc::Error>&& src, const Unwrap& _) {
         if (!src.has_value()) {
-            const auto errStr = std::format("Errno: {}", src.error());
-            throw std::runtime_error(errStr);
+            std::println(std::cerr, "{}. clErr: {}", src.error().msg, src.error().clErr);
+            std::exit(1);
         }
         return std::forward_like<T>(src.value());
     }

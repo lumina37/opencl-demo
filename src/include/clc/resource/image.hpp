@@ -19,15 +19,15 @@ public:
     ImageManager(ImageManager&& rhs) noexcept;
     ~ImageManager() noexcept;
 
-    [[nodiscard]] static std::expected<ImageManager, cl_int> create(ContextManager& contextMgr, Extent extent,
+    [[nodiscard]] static std::expected<ImageManager, Error> create(ContextManager& contextMgr, Extent extent,
                                                                     cl_mem_flags memType) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, cl_int> createRead(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<ImageManager, Error> createRead(ContextManager& contextMgr,
                                                                         Extent extent) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, cl_int> createWrite(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<ImageManager, Error> createWrite(ContextManager& contextMgr,
                                                                          Extent extent) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, cl_int> createReadUMA(ContextManager& contextMgr, Extent extent,
+    [[nodiscard]] static std::expected<ImageManager, Error> createReadUMA(ContextManager& contextMgr, Extent extent,
                                                                            std::span<std::byte> hostMem) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, cl_int> createWriteUMA(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<ImageManager, Error> createWriteUMA(ContextManager& contextMgr,
                                                                             Extent extent) noexcept;
 
     [[nodiscard]] cl_mem getImage() const noexcept { return image_; }

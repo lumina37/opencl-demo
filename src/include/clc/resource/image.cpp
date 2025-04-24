@@ -5,6 +5,7 @@
 
 #include "clc/device/context.hpp"
 #include "clc/extent.hpp"
+#include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/resource/image.hpp"
@@ -22,8 +23,8 @@ ImageManager::~ImageManager() noexcept {
     image_ = nullptr;
 }
 
-std::expected<ImageManager, cl_int> ImageManager::create(ContextManager& contextMgr, const Extent extent,
-                                                         const cl_mem_flags memType) noexcept {
+std::expected<ImageManager, Error> ImageManager::create(ContextManager& contextMgr, const Extent extent,
+                                                        const cl_mem_flags memType) noexcept {
     cl_int clErr;
 
     cl_image_desc imageDesc{};
@@ -37,22 +38,21 @@ std::expected<ImageManager, cl_int> ImageManager::create(ContextManager& context
 
     auto context = contextMgr.getContext();
     cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
     return ImageManager{std::move(image)};
 }
 
-std::expected<ImageManager, cl_int> ImageManager::createWrite(ContextManager& contextMgr,
-                                                              const Extent extent) noexcept {
+std::expected<ImageManager, Error> ImageManager::createWrite(ContextManager& contextMgr, const Extent extent) noexcept {
     return create(contextMgr, extent, CL_MEM_WRITE_ONLY);
 }
 
-std::expected<ImageManager, cl_int> ImageManager::createRead(ContextManager& contextMgr, const Extent extent) noexcept {
+std::expected<ImageManager, Error> ImageManager::createRead(ContextManager& contextMgr, const Extent extent) noexcept {
     return create(contextMgr, extent, CL_MEM_READ_ONLY);
 }
 
-std::expected<ImageManager, cl_int> ImageManager::createReadUMA(ContextManager& contextMgr, Extent extent,
-                                                                std::span<std::byte> hostMem) noexcept {
+std::expected<ImageManager, Error> ImageManager::createReadUMA(ContextManager& contextMgr, Extent extent,
+                                                               std::span<std::byte> hostMem) noexcept {
     cl_int clErr;
 
     auto context = contextMgr.getContext();
@@ -69,12 +69,12 @@ std::expected<ImageManager, cl_int> ImageManager::createReadUMA(ContextManager& 
     imageFormat.image_channel_data_type = extent.clChannelType();
 
     cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, hostMem.data(), &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
     return ImageManager{std::move(image)};
 }
 
-std::expected<ImageManager, cl_int> ImageManager::createWriteUMA(ContextManager& contextMgr, Extent extent) noexcept {
+std::expected<ImageManager, Error> ImageManager::createWriteUMA(ContextManager& contextMgr, Extent extent) noexcept {
     cl_int clErr;
 
     auto context = contextMgr.getContext();
@@ -90,7 +90,7 @@ std::expected<ImageManager, cl_int> ImageManager::createWriteUMA(ContextManager&
     imageFormat.image_channel_data_type = extent.clChannelType();
 
     cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
     return ImageManager{std::move(image)};
 }

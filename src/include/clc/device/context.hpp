@@ -15,7 +15,7 @@ public:
     ContextManager(ContextManager&&) noexcept;
     ~ContextManager() noexcept;
 
-    [[nodiscard]] static std::expected<ContextManager, cl_int> create(DeviceManager& deviceMgr) noexcept;
+    [[nodiscard]] static std::expected<ContextManager, Error> create(DeviceManager& deviceMgr) noexcept;
 
     [[nodiscard]] cl_context getContext() const noexcept { return context_; }
 

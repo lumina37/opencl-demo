@@ -20,7 +20,7 @@ public:
     KernelManager(KernelManager&& rhs) noexcept;
     ~KernelManager() noexcept;
 
-    [[nodiscard]] static std::expected<KernelManager, cl_int> create(DeviceManager& deviceMgr,
+    [[nodiscard]] static std::expected<KernelManager, Error> create(DeviceManager& deviceMgr,
                                                                      ContextManager& contextMgr,
                                                                      std::span<std::byte> code) noexcept;
 
@@ -29,7 +29,7 @@ public:
         return std::forward_like<Self>(self).kernel_;
     }
 
-    [[nodiscard]] std::expected<void, cl_int> setKernelArgs(std::span<KernelArg> args) noexcept;
+    [[nodiscard]] std::expected<void, Error> setKernelArgs(std::span<KernelArg> args) noexcept;
 
 private:
     cl_program program_;

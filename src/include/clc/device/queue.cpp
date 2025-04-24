@@ -6,6 +6,7 @@
 
 #include "clc/device/context.hpp"
 #include "clc/device/device.hpp"
+#include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/device/queue.hpp"
@@ -23,8 +24,8 @@ QueueManager::~QueueManager() noexcept {
     queue_ = nullptr;
 }
 
-std::expected<QueueManager, cl_int> QueueManager::createWithProps(DeviceManager& deviceMgr, ContextManager& contextMgr,
-                                                                  cl_queue_properties queueProps) noexcept {
+std::expected<QueueManager, Error> QueueManager::createWithProps(DeviceManager& deviceMgr, ContextManager& contextMgr,
+                                                                 cl_queue_properties queueProps) noexcept {
     cl_int clErr;
 
     auto device = deviceMgr.getDevice();
@@ -33,7 +34,7 @@ std::expected<QueueManager, cl_int> QueueManager::createWithProps(DeviceManager&
                                     queueProps | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, (cl_queue_properties)0};
     cl_command_queue queue = clCreateCommandQueueWithProperties(context, device, realQueueProps.data(), &clErr);
 
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
     return QueueManager{std::move(queue)};
 }
 

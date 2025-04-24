@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "clc/extent.hpp"
+#include "clc/helper/error.hpp"
 
 namespace clc {
 
@@ -17,8 +18,8 @@ public:
     StbImageManager(StbImageManager&& rhs) noexcept;
     ~StbImageManager() noexcept;
 
-    [[nodiscard]] static std::expected<StbImageManager, int> createFromPath(const fs::path& path) noexcept;
-    [[nodiscard]] static std::expected<StbImageManager, int> createWithExtent(Extent extent) noexcept;
+    [[nodiscard]] static std::expected<StbImageManager, Error> createFromPath(const fs::path& path) noexcept;
+    [[nodiscard]] static std::expected<StbImageManager, Error> createWithExtent(Extent extent) noexcept;
 
     std::span<std::byte> getImageSpan() const noexcept { return {image_, extent_.size()}; }
 
@@ -27,7 +28,7 @@ public:
         return std::forward_like<Self>(self).extent_;
     }
 
-    std::expected<void, int> saveTo(const fs::path& path) const noexcept;
+    std::expected<void, Error> saveTo(const fs::path& path) const noexcept;
 
     static constexpr cl_channel_order mapStbCompsToClChannelOrder(int comps) noexcept;
 

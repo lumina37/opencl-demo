@@ -4,6 +4,7 @@
 #include <CL/cl.h>
 
 #include "clc/device/context.hpp"
+#include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/resource/buffer.hpp"
@@ -21,22 +22,22 @@ BufferManager::~BufferManager() noexcept {
     buffer_ = nullptr;
 }
 
-std::expected<BufferManager, cl_int> BufferManager::create(ContextManager& contextMgr, size_t size,
-                                                           const cl_mem_flags memType) noexcept {
+std::expected<BufferManager, Error> BufferManager::create(ContextManager& contextMgr, size_t size,
+                                                          const cl_mem_flags memType) noexcept {
     cl_int clErr;
 
     auto context = contextMgr.getContext();
     cl_mem buffer = clCreateBuffer(context, memType, size, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{clErr};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
     return BufferManager{std::move(buffer)};
 }
 
-std::expected<BufferManager, cl_int> BufferManager::createRead(ContextManager& contextMgr, size_t size) noexcept {
+std::expected<BufferManager, Error> BufferManager::createRead(ContextManager& contextMgr, size_t size) noexcept {
     return create(contextMgr, size, CL_MEM_READ_ONLY);
 }
 
-std::expected<BufferManager, cl_int> BufferManager::createWrite(ContextManager& contextMgr, size_t size) noexcept {
+std::expected<BufferManager, Error> BufferManager::createWrite(ContextManager& contextMgr, size_t size) noexcept {
     return create(contextMgr, size, CL_MEM_WRITE_ONLY);
 }
 

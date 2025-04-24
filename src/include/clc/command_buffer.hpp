@@ -9,6 +9,7 @@
 
 #include "clc/device/queue.hpp"
 #include "clc/extent.hpp"
+#include "clc/helper/error.hpp"
 #include "clc/kernel.hpp"
 #include "clc/resource.hpp"
 
@@ -22,27 +23,26 @@ class CommandBufferManager {
     CommandBufferManager(std::shared_ptr<QueueManager>&& pQueueMgr) noexcept;
 
 public:
-    [[nodiscard]] static std::expected<CommandBufferManager, cl_int> create(
+    [[nodiscard]] static std::expected<CommandBufferManager, Error> create(
         const std::shared_ptr<QueueManager>& pQueueMgr) noexcept;
 
-    [[nodiscard]] std::expected<void, cl_int> uploadBufferFrom(BufferManager& dstBufferMgr,
+    [[nodiscard]] std::expected<void, Error> uploadBufferFrom(BufferManager& dstBufferMgr,
                                                                std::span<std::byte> src) noexcept;
-    [[nodiscard]] std::expected<void, cl_int> uploadImageFrom(ImageManager& dstImageMgr, std::span<std::byte> src,
+    [[nodiscard]] std::expected<void, Error> uploadImageFrom(ImageManager& dstImageMgr, std::span<std::byte> src,
                                                               Extent extent) noexcept;
-    [[nodiscard]] std::expected<void, cl_int> dispatch(const KernelManager& kernelMgr, Extent extent,
-                                                       GroupSize localGroupSize) noexcept;
-    [[nodiscard]] std::expected<void, cl_int> downloadImageTo(const ImageManager& srcImageMgr, std::span<std::byte> dst,
+    [[nodiscard]] std::expected<void, Error> dispatch(const KernelManager& kernelMgr, Extent extent,
+                                                      GroupSize localGroupSize) noexcept;
+    [[nodiscard]] std::expected<void, Error> downloadImageTo(const ImageManager& srcImageMgr, std::span<std::byte> dst,
                                                               Extent extent) noexcept;
-    [[nodiscard]] std::expected<void, cl_int> waitTransferComplete() noexcept;
+    [[nodiscard]] std::expected<void, Error> waitTransferComplete() noexcept;
 
-    [[nodiscard]] std::expected<std::span<std::byte>, cl_int> mmapForHostRead(ImageManager& imageMgr,
+    [[nodiscard]] std::expected<std::span<std::byte>, Error> mmapForHostRead(ImageManager& imageMgr,
                                                                               Extent extent) noexcept;
-    [[nodiscard]] std::expected<std::span<std::byte>, cl_int> mmapForHostWrite(ImageManager& imageMgr,
+    [[nodiscard]] std::expected<std::span<std::byte>, Error> mmapForHostWrite(ImageManager& imageMgr,
                                                                                Extent extent) noexcept;
-    [[nodiscard]] std::expected<void, cl_int> unmap(ImageManager& imageMgr,
-                                                    std::span<std::byte> mapSpan) noexcept;
+    [[nodiscard]] std::expected<void, Error> unmap(ImageManager& imageMgr, std::span<std::byte> mapSpan) noexcept;
 
-    [[nodiscard]] std::expected<cl_ulong, cl_int> getDispatchElapsedTimeNs() const noexcept;
+    [[nodiscard]] std::expected<cl_ulong, Error> getDispatchElapsedTimeNs() const noexcept;
 
 private:
     std::shared_ptr<QueueManager> pQueueMgr_;

@@ -14,7 +14,7 @@ public:
     QueueManager(QueueManager&&) noexcept;
     ~QueueManager() noexcept;
 
-    [[nodiscard]] static std::expected<QueueManager, cl_int> createWithProps(DeviceManager& deviceMgr,
+    [[nodiscard]] static std::expected<QueueManager, Error> createWithProps(DeviceManager& deviceMgr,
                                                                              ContextManager& contextMgr,
                                                                              cl_queue_properties queueProps) noexcept;
 
