@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <expected>
+#include <functional>
 #include <print>
 #include <ranges>
 #include <string>
@@ -155,8 +156,7 @@ std::expected<DeviceManager::DeviceProps, cl_int> DeviceManager::queryProps(cl_d
     if (!deviceExtRes) return std::unexpected{deviceExtRes.error()};
     props.extensionStr = std::string{deviceExtRes.value().data()};
     props.extensions =
-        props.extensionStr | rgs::views::split(' ') |
-        rgs::views::filter([](const auto& subRange) { return !subRange.empty(); }) |
+        props.extensionStr | rgs::views::split(' ') | rgs::views::filter(std::not_fn(rgs::empty)) |
         rgs::views::transform([](const auto& subRange) { return std::string_view{subRange.begin(), subRange.end()}; }) |
         rgs::to<std::set>();
 
