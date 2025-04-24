@@ -5,12 +5,19 @@
 
 namespace kernel {
 
-namespace _opencl::grayscale {
+namespace _opencl::gray_fp32 {
 
-#include "opencl/grayscale.cl.h"
+#include "opencl/grayscale_fp32.cl.h"
 
 }
 
-static const std::span grayscaleOclCode{(std::byte*)_opencl::grayscale::source, sizeof(_opencl::grayscale::source)};
+namespace _opencl::gray_fp16 {
 
-}  // namespace shader
+#include "opencl/grayscale_fp16.cl.h"
+
+}
+
+static const std::span grayscaleFp32Code{(std::byte*)_opencl::gray_fp32::source, sizeof(_opencl::gray_fp32::source)};
+static const std::span grayscaleFp16Code{(std::byte*)_opencl::gray_fp16::source, sizeof(_opencl::gray_fp16::source)};
+
+}  // namespace kernel

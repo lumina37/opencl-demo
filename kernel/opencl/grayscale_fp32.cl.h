@@ -1,6 +1,7 @@
 #pragma once
 
-const char source[] = R"(__kernel void clcmain(__read_only image2d_t inputImage,
+const char source[] = R"(
+__kernel void clcmain(__read_only image2d_t inputImage,
                       __write_only image2d_t outputImage) {
     int2 coord = (int2)(get_global_id(0), get_global_id(1));
 

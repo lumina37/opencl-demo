@@ -43,7 +43,13 @@ int main() {
     clc::ImageManager srcImageMgr = clc::ImageManager::createRead(contextMgr, srcImage.getExtent()) | unwrap;
     clc::ImageManager dstImageMgr = clc::ImageManager::createWrite(contextMgr, dstImage.getExtent()) | unwrap;
 
-    clc::KernelManager kernelMgr = clc::KernelManager::create(deviceMgr, contextMgr, kernel::grayscaleOclCode) | unwrap;
+    std::span<std::byte> oclSource;
+    if (deviceMgr.hasExtension("cl_khr_fp16")) {
+        oclSource = kernel::grayscaleFp16Code;
+    } else {
+        oclSource = kernel::grayscaleFp32Code;
+    }
+    clc::KernelManager kernelMgr = clc::KernelManager::create(deviceMgr, contextMgr, oclSource) | unwrap;
     std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
     kernelMgr.setKernelArgs(kernelArgs) | unwrap;
     clc::CommandBufferManager commandBufferMgr = clc::CommandBufferManager::create(pQueueMgr) | unwrap;
