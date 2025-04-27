@@ -1,6 +1,3 @@
-#pragma once
-
-const char source[] = R"(
 #pragma OPENCL EXTENSION cl_khr_fp16 : enable
 
 __kernel void clcmain(__read_only image2d_t inputImage,
@@ -17,4 +14,3 @@ __kernel void clcmain(__read_only image2d_t inputImage,
         write_imageh(outputImage, coord, outputPixel);
     }
 }
-)";

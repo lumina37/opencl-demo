@@ -7,13 +7,13 @@ namespace kernel {
 
 namespace _opencl::gray_fp32 {
 
-#include "opencl/grayscale_fp32.cl.h"
+#include "opencl/grayscale_fp32.h"
 
 }
 
 namespace _opencl::gray_fp16 {
 
-#include "opencl/grayscale_fp16.cl.h"
+#include "opencl/grayscale_fp16.h"
 
 }
 
