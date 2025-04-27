@@ -38,8 +38,7 @@ int main() {
     if (deviceProps.supportOutOfOrderQueue) {
         queueProps |= CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE;
     }
-    auto pQueueMgr = std::make_shared<clc::QueueManager>(
-        clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap);
+    clc::QueueManager queueMgr = clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap;
 
     clc::ImageManager srcImageMgr = clc::ImageManager::createRead(contextMgr, srcImage.getExtent()) | unwrap;
     clc::ImageManager dstImageMgr = clc::ImageManager::createWrite(contextMgr, dstImage.getExtent()) | unwrap;
@@ -53,14 +52,18 @@ int main() {
     clc::KernelManager kernelMgr = clc::KernelManager::create(deviceMgr, contextMgr, oclSource) | unwrap;
     std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
     kernelMgr.setKernelArgs(kernelArgs) | unwrap;
-    clc::CommandBufferManager commandBufferMgr = clc::CommandBufferManager::create(pQueueMgr) | unwrap;
 
-    commandBufferMgr.uploadImageFrom(srcImageMgr, srcImage.getImageSpan(), srcImage.getExtent()) | unwrap;
-    commandBufferMgr.dispatch(kernelMgr, dstImage.getExtent(), {16, 16}) | unwrap;
-    commandBufferMgr.downloadImageTo(dstImageMgr, dstImage.getImageSpan(), dstImage.getExtent()) | unwrap;
-    commandBufferMgr.waitTransferComplete() | unwrap;
+    clc::EventManager uploadEv =
+        queueMgr.uploadImageFrom(srcImageMgr, srcImage.getImageSpan(), srcImage.getExtent(), {}) | unwrap;
+    std::array uploadEvs{std::cref(uploadEv)};
+    clc::EventManager dispatchEv = queueMgr.dispatch(kernelMgr, dstImage.getExtent(), {16, 16}, uploadEvs) | unwrap;
+    std::array dispatchEvs{std::cref(dispatchEv)};
+    clc::EventManager downloadEv =
+        queueMgr.downloadImageTo(dstImageMgr, dstImage.getImageSpan(), dstImage.getExtent(), dispatchEvs) | unwrap;
+    std::array downloadEvs{std::cref(downloadEv)};
+    clc::EventManager::wait(downloadEvs) | unwrap;
 
-    float elapsedTime = (float)commandBufferMgr.getDispatchElapsedTimeNs().value() / (float)1e6;
+    float elapsedTime = (float)dispatchEv.getElapsedTimeNs().value() / (float)1e6;
     std::println("Dispatch elapsed time: {} ms", elapsedTime);
 
     dstImage.saveTo("out.png") | unwrap;

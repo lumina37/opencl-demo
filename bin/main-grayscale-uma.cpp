@@ -41,8 +41,7 @@ int main() {
     if (deviceProps.supportOutOfOrderQueue) {
         queueProps |= CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE;
     }
-    auto pQueueMgr = std::make_shared<clc::QueueManager>(
-        clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap);
+    clc::QueueManager queueMgr = clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap;
 
     clc::ImageManager srcImageMgr =
         clc::ImageManager::createReadUMA(contextMgr, srcImage.getExtent(), srcImage.getImageSpan()) | unwrap;
@@ -52,14 +51,14 @@ int main() {
         clc::KernelManager::create(deviceMgr, contextMgr, kernel::grayscaleFp32Code) | unwrap;
     std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
     kernelMgr.setKernelArgs(kernelArgs) | unwrap;
-    clc::CommandBufferManager commandBufferMgr = clc::CommandBufferManager::create(pQueueMgr) | unwrap;
 
-    commandBufferMgr.dispatch(kernelMgr, dstImage.getExtent(), {16, 16}) | unwrap;
-    auto dstSpan = commandBufferMgr.mmapForHostRead(dstImageMgr, dstImage.getExtent()) | unwrap;
+    clc::EventManager dispatchEv = queueMgr.dispatch(kernelMgr, dstImage.getExtent(), {16, 16}, {}) | unwrap;
+    std::array dispatchEvs{std::cref(dispatchEv)};
+    auto dstSpan = queueMgr.mmapForHostRead(dstImageMgr, dstImage.getExtent(), dispatchEvs) | unwrap;
     std::copy(dstSpan.begin(), dstSpan.end(), dstImage.getImageSpan().begin());
-    commandBufferMgr.unmap(dstImageMgr, dstSpan) | unwrap;
+    queueMgr.unmap(dstImageMgr, dstSpan) | unwrap;
 
-    float elapsedTime = (float)commandBufferMgr.getDispatchElapsedTimeNs().value() / (float)1e6;
+    float elapsedTime = (float)dispatchEv.getElapsedTimeNs().value() / (float)1e6;
     std::println("Dispatch elapsed time: {} ms", elapsedTime);
 
     dstImage.saveTo("out.png") | unwrap;
