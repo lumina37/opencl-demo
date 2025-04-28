@@ -8,7 +8,7 @@
 #include <CL/cl.h>
 
 #include "clc/device/context.hpp"
-#include "clc/device/device.hpp"
+#include "clc/device/manager.hpp"
 #include "clc/event.hpp"
 #include "clc/kernel.hpp"
 #include "clc/resource.hpp"

@@ -1,0 +1,93 @@
+#pragma once
+
+#include <expected>
+#include <utility>
+
+#include <CL/cl.h>
+
+#include "clc/device/helper.hpp"
+#include "clc/device/props.hpp"
+#include "clc/device/score.hpp"
+#include "clc/helper/error.hpp"
+
+namespace clc {
+
+std::expected<float, Error> defaultJudge(const DeviceWithProps_<>& deviceWithProps) noexcept;
+
+template <typename TProps_ = DeviceProps>
+class Devices_ {
+public:
+    using TProps = TProps_;
+    using TDeviceWithProps = DeviceWithProps_<TProps>;
+    using FnJudge = std::expected<float, Error> (*)(const TDeviceWithProps&) noexcept;
+
+private:
+    Devices_(std::vector<TDeviceWithProps>&& deviceWithPropsVec) noexcept;
+
+public:
+    [[nodiscard]] static std::expected<Devices_, Error> create() noexcept;
+
+    [[nodiscard]] std::expected<std::reference_wrapper<TDeviceWithProps>, Error> select(
+        const FnJudge& judge = defaultJudge) noexcept;
+
+private:
+    std::vector<TDeviceWithProps> deviceWithPropsVec_;
+};
+
+template <typename TProps>
+Devices_<TProps>::Devices_(std::vector<TDeviceWithProps>&& deviceWithPropsVec) noexcept
+    : deviceWithPropsVec_(std::move(deviceWithPropsVec)) {}
+
+template <typename TProps>
+std::expected<Devices_<TProps>, Error> Devices_<TProps>::create() noexcept {
+    auto platformsRes = getPlatformIDs();
+    if (!platformsRes) return std::unexpected{std::move(platformsRes.error())};
+    const auto& platforms = platformsRes.value();
+
+    std::vector<TDeviceWithProps> deviceWithPropsVec;
+    for (const auto& platform : platforms) {
+        auto devicesRes = getDeviceIDs(platform);
+        if (!devicesRes) return std::unexpected{std::move(devicesRes.error())};
+
+        const auto& devices = devicesRes.value();
+        for (const auto& device : devices) {
+            auto deviceMgrRes = DeviceManager::create(platform, device);
+            if (!deviceMgrRes) return std::unexpected{std::move(deviceMgrRes.error())};
+            auto& deviceMgr = deviceMgrRes.value();
+
+            auto devicePropsRes = DeviceProps::create(device);
+            if (!devicePropsRes) return std::unexpected{std::move(devicePropsRes.error())};
+            auto& deviceProps = devicePropsRes.value();
+
+            deviceWithPropsVec.emplace_back(std::move(deviceMgr), std::move(deviceProps));
+        }
+    }
+
+    return Devices_{std::move(deviceWithPropsVec)};
+}
+
+template <typename TProps>
+std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<TProps>::select(
+    const FnJudge& judge) noexcept {
+    std::vector<Score<std::reference_wrapper<TDeviceWithProps>>> scores;
+    scores.reserve(deviceWithPropsVec_.size());
+
+    for (auto& deviceWithProps : deviceWithPropsVec_) {
+        auto scoresRes = judge(deviceWithProps);
+        if (!scoresRes) return std::unexpected{std::move(scoresRes.error())};
+        scores.emplace_back(scoresRes.value(), std::ref(deviceWithProps));
+    }
+
+    if (scores.empty()) {
+        return std::unexpected{1};
+    }
+
+    auto maxScoreIt = std::max_element(scores.begin(), scores.end());
+    return std::move(maxScoreIt->attachment);
+}
+
+}  // namespace clc
+
+#ifdef _CLC_LIB_HEADER_ONLY
+#    include "clc/device/select.cpp"
+#endif

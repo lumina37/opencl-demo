@@ -1,73 +1,76 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <expected>
-#include <type_traits>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <CL/cl.h>
 
+#include "clc/device/manager.hpp"
 #include "clc/helper/error.hpp"
 
 namespace clc {
 
-static inline constexpr uint32_t packVersion(uint16_t major, uint16_t minor) noexcept {
-    return (uint32_t)major << 16 | (uint32_t)minor;
-}
+class DeviceProps {
+public:
+    DeviceProps() noexcept = default;
+    DeviceProps(const DeviceProps&) = delete;
+    DeviceProps(DeviceProps&&) noexcept = default;
 
-std::expected<std::vector<cl_platform_id>, Error> getPlatformIDs() noexcept;
+    [[nodiscard]] static std::expected<DeviceProps, Error> create(cl_device_id device) noexcept;
 
-std::expected<std::vector<cl_device_id>, Error> getDeviceIDs(cl_platform_id platform) noexcept;
+    [[nodiscard]] bool hasExtension(std::string_view extName) const noexcept;
 
-template <typename Tv>
-    requires !std::is_array_v<Tv> && std::is_trivially_copyable_v<Tv>
-std::expected<Tv, Error> getPlatformInfo(const cl_platform_id& platform, const cl_device_info& key) {
-    Tv value;
-    const cl_int clErr = clGetPlatformInfo(platform, key, sizeof(Tv), &value, nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
-    return value;
-}
+    // Members
+    cl_device_type deviceType;
+    size_t maxWorkGroupSize;
+    std::array<size_t, 3> maxWorkItemSize;
+    size_t prefferedBasicWorkGroupSize;
+    cl_ulong globalMemCacheSize;
+    cl_ulong globalMemSize;
+    cl_ulong maxConstBufferSize;
+    cl_ulong localMemSize;
+    cl_uint maxComputeUnits;
+    cl_uint globalMemCachelineSize;
+    cl_uint imagePitchAlign;
+    cl_uint imageBaseAddrAlign;
+    uint32_t deviceVersion;
+    uint16_t deviceVersionMajor;
+    uint16_t deviceVersionMinor;
+    bool realLocalMem;
+    bool supportSubGroup;
+    bool supportOutOfOrderQueue;
+    bool supportReadWriteImage;
+    bool supportImageFromBuffer;
+    bool supportCoarseSVM;
+    std::string extensionStr;
+    std::vector<std::string_view> extensions;
+};
 
-template <typename TArr, typename TElem = std::remove_extent_t<TArr>>
-    requires std::is_unbounded_array_v<TArr>
-std::expected<std::vector<TElem>, Error> getPlatformInfo(const cl_platform_id& platform, const cl_device_info& key) {
-    cl_int clErr;
+template <typename TProps_ = DeviceProps>
+class DeviceWithProps_ {
+public:
+    using TProps = TProps_;
 
-    size_t valueSize;
-    clErr = clGetPlatformInfo(platform, key, 0, nullptr, &valueSize);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    DeviceWithProps_(DeviceManager&& manager, TProps&& props) noexcept;
 
-    std::vector<TElem> value(valueSize);  // TODO: how to avoid pre-init?
-    clErr = clGetPlatformInfo(platform, key, valueSize, value.data(), nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    template <typename Self>
+    [[nodiscard]] auto&& getManager(this Self&& self) noexcept {
+        return std::forward_like<Self>(self).manager_;
+    }
+    [[nodiscard]] const TProps& getProps() const noexcept { return props_; }
 
-    return value;
-}
+private:
+    DeviceManager manager_;
+    TProps props_;
+};
 
-template <typename Tv>
-    requires !std::is_unbounded_array_v<Tv> && std::is_trivially_copyable_v<Tv>
-std::expected<Tv, Error> getDeviceInfo(const cl_device_id& device, const cl_device_info& key) {
-    Tv value;
-    const cl_int clErr = clGetDeviceInfo(device, key, sizeof(Tv), &value, nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
-    return value;
-}
-
-template <typename TArr, typename TElem = std::remove_extent_t<TArr>>
-    requires std::is_unbounded_array_v<TArr>
-std::expected<std::vector<TElem>, Error> getDeviceInfo(const cl_device_id& device, const cl_device_info& key) {
-    cl_int clErr;
-
-    size_t valueSize;
-    clErr = clGetDeviceInfo(device, key, 0, nullptr, &valueSize);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
-
-    std::vector<TElem> value(valueSize);  // TODO: how to avoid pre-init?
-    clErr = clGetDeviceInfo(device, key, valueSize, value.data(), nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
-
-    return value;
-}
+template <typename TProps>
+DeviceWithProps_<TProps>::DeviceWithProps_(DeviceManager&& manager, TProps&& props) noexcept
+    : manager_(std::move(manager)), props_(std::move(props)) {}
 
 }  // namespace clc
 

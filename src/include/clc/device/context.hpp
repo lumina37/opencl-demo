@@ -4,7 +4,7 @@
 
 #include <CL/cl.h>
 
-#include "clc/device/device.hpp"
+#include "clc/device/manager.hpp"
 
 namespace clc {
 

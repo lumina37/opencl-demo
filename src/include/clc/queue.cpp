@@ -8,7 +8,7 @@
 #include <CL/cl.h>
 
 #include "clc/device/context.hpp"
-#include "clc/device/device.hpp"
+#include "clc/device/manager.hpp"
 #include "clc/helper/error.hpp"
 #include "clc/resource.hpp"
 
@@ -36,9 +36,9 @@ std::expected<QueueManager, Error> QueueManager::createWithProps(DeviceManager& 
 
     auto device = deviceMgr.getDevice();
     auto context = contextMgr.getContext();
-    const std::array realQueueProps{(cl_queue_properties)CL_QUEUE_PROPERTIES,
+    const std::array queuePropArray{(cl_queue_properties)CL_QUEUE_PROPERTIES,
                                     queueProps | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, (cl_queue_properties)0};
-    cl_command_queue queue = clCreateCommandQueueWithProperties(context, device, realQueueProps.data(), &clErr);
+    cl_command_queue queue = clCreateCommandQueueWithProperties(context, device, queuePropArray.data(), &clErr);
 
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
     return QueueManager{std::move(queue)};

@@ -7,8 +7,8 @@
 
 #include <CL/cl.h>
 
-#include "clc/device/device.hpp"
-#include "clc/helper/defines.hpp"
+#include "clc/common/defines.hpp"
+#include "clc/device/manager.hpp"
 #include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
