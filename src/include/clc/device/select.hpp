@@ -112,7 +112,7 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<
     }
 
     if (scores.empty()) {
-        return std::unexpected{1};
+        return std::unexpected{Error{1, "no sufficient device"}};
     }
 
     auto maxScoreIt = std::max_element(scores.begin(), scores.end());
