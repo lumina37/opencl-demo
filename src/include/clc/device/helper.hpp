@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <expected>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -14,6 +15,17 @@ namespace clc {
 
 static constexpr uint32_t packVersion(uint16_t major, uint16_t minor) noexcept {
     return (uint32_t)major << 16 | (uint32_t)minor;
+}
+
+static std::pair<uint16_t, uint16_t> parseVersion(std::string_view versionStr) noexcept {
+    constexpr size_t majorStartOffset = 7;
+    const size_t dotOffset = versionStr.find_first_of('.', majorStartOffset + 1);
+    const size_t secondSpaceOffset = versionStr.find_first_of(' ', dotOffset + 1);
+    const auto deviceVersionMajorStr = versionStr.substr(majorStartOffset, dotOffset - majorStartOffset);
+    const auto deviceVersionMinorStr = versionStr.substr(dotOffset + 1, secondSpaceOffset - dotOffset - 1);
+    const uint16_t major = (uint16_t)std::stoi(std::string{deviceVersionMajorStr});
+    const uint16_t minor = (uint16_t)std::stoi(std::string{deviceVersionMinorStr});
+    return {major, minor};
 }
 
 std::expected<std::vector<cl_platform_id>, Error> getPlatformIDs() noexcept;

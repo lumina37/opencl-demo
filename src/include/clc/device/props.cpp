@@ -26,13 +26,9 @@ std::expected<DeviceProps, Error> DeviceProps::create(cl_device_id device) noexc
     auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
     if (!deviceVersionRes) return std::unexpected{std::move(deviceVersionRes.error())};
     const auto deviceVersion = std::string_view{deviceVersionRes.value().data()};
-    constexpr size_t majorStartOffset = 7;
-    const size_t dotOffset = deviceVersion.find_first_of('.', majorStartOffset + 1);
-    const size_t secondSpaceOffset = deviceVersion.find_first_of(' ', dotOffset + 1);
-    const auto deviceVersionMajorStr = deviceVersion.substr(majorStartOffset, dotOffset - majorStartOffset);
-    const auto deviceVersionMinorStr = deviceVersion.substr(dotOffset + 1, secondSpaceOffset - dotOffset - 1);
-    props.deviceVersionMajor = (uint16_t)std::stoi(std::string{deviceVersionMajorStr});
-    props.deviceVersionMinor = (uint16_t)std::stoi(std::string{deviceVersionMinorStr});
+    auto [majorVersion, minorVersion] = parseVersion(deviceVersion);
+    props.deviceVersionMajor = majorVersion;
+    props.deviceVersionMinor = minorVersion;
     props.deviceVersion = packVersion(props.deviceVersionMajor, props.deviceVersionMinor);
 
     auto deviceTypeRes = getDeviceInfo<cl_device_type>(device, CL_DEVICE_TYPE);
@@ -166,6 +162,6 @@ bool DeviceProps::hasExtension(std::string_view extName) const noexcept {
     return rgs::binary_search(extensions, extName);
 }
 
-template class DeviceWithProps_<>;
+template class DeviceWithProps_<DeviceProps>;
 
 }  // namespace clc

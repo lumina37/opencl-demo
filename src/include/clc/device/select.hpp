@@ -14,9 +14,9 @@
 
 namespace clc {
 
-std::expected<float, Error> defaultJudge(const DeviceWithProps& deviceWithProps) noexcept;
+std::expected<float, Error> defaultJudge(const DeviceWithProps_<DeviceProps>& deviceWithProps) noexcept;
 
-template <CDeviceProps TProps_ = DeviceProps>
+template <CDeviceProps TProps_>
 class Devices_ {
 public:
     using TProps = TProps_;
@@ -57,7 +57,7 @@ std::expected<Devices_<TProps>, Error> Devices_<TProps>::create() noexcept {
             if (!deviceMgrRes) return std::unexpected{std::move(deviceMgrRes.error())};
             auto& deviceMgr = deviceMgrRes.value();
 
-            auto devicePropsRes = DeviceProps::create(device);
+            auto devicePropsRes = TProps::create(device);
             if (!devicePropsRes) return std::unexpected{std::move(devicePropsRes.error())};
             auto& deviceProps = devicePropsRes.value();
 
@@ -118,8 +118,6 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<
     auto maxScoreIt = std::max_element(scores.begin(), scores.end());
     return std::move(maxScoreIt->attachment);
 }
-
-using Devices = Devices_<>;
 
 }  // namespace clc
 

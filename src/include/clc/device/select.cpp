@@ -12,7 +12,7 @@
 
 namespace clc {
 
-std::expected<float, Error> defaultJudge(const DeviceWithProps& deviceWithProps) noexcept {
+std::expected<float, Error> defaultJudge(const DeviceWithProps_<DeviceProps>& deviceWithProps) noexcept {
     const DeviceProps& props = deviceWithProps.getProps();
 
     if (props.deviceVersionMajor < 2) return std::numeric_limits<float>::lowest();

@@ -52,7 +52,7 @@ public:
     std::vector<std::string_view> extensions;
 };
 
-template <CDeviceProps TProps_ = DeviceProps>
+template <CDeviceProps TProps_>
 class DeviceWithProps_ {
 public:
     using TProps = TProps_;
@@ -73,10 +73,6 @@ private:
 template <CDeviceProps TProps>
 DeviceWithProps_<TProps>::DeviceWithProps_(DeviceManager&& manager, TProps&& props) noexcept
     : manager_(std::move(manager)), props_(std::move(props)) {}
-
-using DeviceWithProps = DeviceWithProps_<>;
-
-static_assert(CDeviceProps<DeviceProps>);
 
 }  // namespace clc
 
