@@ -12,9 +12,9 @@
 
 namespace clc {
 
-std::expected<float, Error> defaultJudge(const DeviceWithProps_<>& deviceWithProps) noexcept;
+std::expected<float, Error> defaultJudge(const DeviceWithProps& deviceWithProps) noexcept;
 
-template <typename TProps_ = DeviceProps>
+template <CDeviceProps TProps_ = DeviceProps>
 class Devices_ {
 public:
     using TProps = TProps_;
@@ -34,11 +34,11 @@ private:
     std::vector<TDeviceWithProps> deviceWithPropsVec_;
 };
 
-template <typename TProps>
+template <CDeviceProps TProps>
 Devices_<TProps>::Devices_(std::vector<TDeviceWithProps>&& deviceWithPropsVec) noexcept
     : deviceWithPropsVec_(std::move(deviceWithPropsVec)) {}
 
-template <typename TProps>
+template <CDeviceProps TProps>
 std::expected<Devices_<TProps>, Error> Devices_<TProps>::create() noexcept {
     auto platformsRes = getPlatformIDs();
     if (!platformsRes) return std::unexpected{std::move(platformsRes.error())};
@@ -66,7 +66,7 @@ std::expected<Devices_<TProps>, Error> Devices_<TProps>::create() noexcept {
     return Devices_{std::move(deviceWithPropsVec)};
 }
 
-template <typename TProps>
+template <CDeviceProps TProps>
 std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<TProps>::select(
     const FnJudge& judge) noexcept {
     std::vector<Score<std::reference_wrapper<TDeviceWithProps>>> scores;
@@ -85,6 +85,8 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<
     auto maxScoreIt = std::max_element(scores.begin(), scores.end());
     return std::move(maxScoreIt->attachment);
 }
+
+using Devices = Devices_<>;
 
 }  // namespace clc
 

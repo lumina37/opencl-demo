@@ -9,6 +9,7 @@
 
 #include <CL/cl.h>
 
+#include "clc/device/concepts.hpp"
 #include "clc/device/manager.hpp"
 #include "clc/helper/error.hpp"
 
@@ -50,7 +51,7 @@ public:
     std::vector<std::string_view> extensions;
 };
 
-template <typename TProps_ = DeviceProps>
+template <CDeviceProps TProps_ = DeviceProps>
 class DeviceWithProps_ {
 public:
     using TProps = TProps_;
@@ -68,9 +69,13 @@ private:
     TProps props_;
 };
 
-template <typename TProps>
+template <CDeviceProps TProps>
 DeviceWithProps_<TProps>::DeviceWithProps_(DeviceManager&& manager, TProps&& props) noexcept
     : manager_(std::move(manager)), props_(std::move(props)) {}
+
+using DeviceWithProps = DeviceWithProps_<>;
+
+static_assert(CDeviceProps<DeviceProps>);
 
 }  // namespace clc
 

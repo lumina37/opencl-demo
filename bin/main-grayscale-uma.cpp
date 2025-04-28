@@ -34,8 +34,10 @@ int main() {
     clc::StbImageManager srcImage = clc::StbImageManager::createFromPath("in.png") | unwrap;
     clc::StbImageManager dstImage = clc::StbImageManager::createWithExtent(srcImage.getExtent()) | unwrap;
 
-    clc::DeviceManager deviceMgr = clc::DeviceManager::create() | unwrap;
-    clc::DeviceProps deviceProps = clc::DeviceProps::create(deviceMgr.getDevice()) | unwrap;
+    clc::Devices devices = clc::Devices::create() | unwrap;
+    clc::DeviceWithProps& deviceWithProps = (devices.select() | unwrap).get();
+    const clc::DeviceProps& deviceProps = deviceWithProps.getProps();
+    clc::DeviceManager& deviceMgr = deviceWithProps.getManager();
     clc::ContextManager contextMgr = clc::ContextManager::create(deviceMgr) | unwrap;
     cl_queue_properties queueProps = CL_QUEUE_PROFILING_ENABLE;
     if (deviceProps.supportOutOfOrderQueue) {

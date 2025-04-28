@@ -31,8 +31,8 @@ int main() {
     clc::StbImageManager srcImage = clc::StbImageManager::createFromPath("in.png") | unwrap;
     clc::StbImageManager dstImage = clc::StbImageManager::createWithExtent(srcImage.getExtent()) | unwrap;
 
-    clc::Devices_<> devices = clc::Devices_<>::create() | unwrap;
-    clc::DeviceWithProps_<>& deviceWithProps = (devices.select() | unwrap).get();
+    clc::Devices devices = clc::Devices::create() | unwrap;
+    clc::DeviceWithProps& deviceWithProps = (devices.select() | unwrap).get();
     const clc::DeviceProps& deviceProps = deviceWithProps.getProps();
     clc::DeviceManager& deviceMgr = deviceWithProps.getManager();
     clc::ContextManager contextMgr = clc::ContextManager::create(deviceMgr) | unwrap;

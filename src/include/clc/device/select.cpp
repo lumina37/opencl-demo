@@ -15,7 +15,7 @@
 
 namespace clc {
 
-std::expected<float, Error> defaultJudge(const DeviceWithProps_<>& deviceWithProps) noexcept {
+std::expected<float, Error> defaultJudge(const DeviceWithProps& deviceWithProps) noexcept {
     const auto getDeviceScore = [](const cl_device_id device, const DeviceProps& props) -> std::expected<float, Error> {
         if (props.deviceVersionMajor < 2) return std::numeric_limits<float>::lowest();
 
@@ -64,7 +64,6 @@ std::expected<float, Error> defaultJudge(const DeviceWithProps_<>& deviceWithPro
     return scoreRes.value();
 }
 
-template class Devices_<>;
-using Devices = Devices_<>;
+template class Devices_<DeviceProps>;
 
 }  // namespace clc

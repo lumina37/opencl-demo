@@ -161,6 +161,5 @@ bool DeviceProps::hasExtension(std::string_view extName) const noexcept {
 }
 
 template class DeviceWithProps_<>;
-using DeviceWithProps = DeviceWithProps_<>;
 
 }  // namespace clc
