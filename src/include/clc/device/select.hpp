@@ -1,10 +1,12 @@
 #pragma once
 
 #include <expected>
+#include <print>
 #include <utility>
 
 #include <CL/cl.h>
 
+#include "clc/common/defines.hpp"
 #include "clc/device/helper.hpp"
 #include "clc/device/props.hpp"
 #include "clc/device/score.hpp"
@@ -72,10 +74,41 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<
     std::vector<Score<std::reference_wrapper<TDeviceWithProps>>> scores;
     scores.reserve(deviceWithPropsVec_.size());
 
+    const auto printDeviceInfo = [](const TDeviceWithProps& deviceWithProps,
+                                    const float score) -> std::expected<void, Error> {
+        const auto rstrip = [](std::string_view str) {
+            size_t lastCh = str.find_last_not_of(' ');
+            return str.substr(0, lastCh + 1);
+        };
+
+        const cl_device_id device = deviceWithProps.getManager().getDevice();
+        const TProps& props = deviceWithProps.getProps();
+
+        auto deviceNameRes = getDeviceInfo<char[]>(device, CL_DEVICE_NAME);
+        if (!deviceNameRes) return std::unexpected{std::move(deviceNameRes.error())};
+        const auto deviceName = rstrip(std::string_view{deviceNameRes.value().data()});
+
+        const auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
+        if (!deviceVersionRes) return std::unexpected{std::move(deviceVersionRes.error())};
+        const auto deviceVersion = rstrip(std::string_view{deviceVersionRes.value().data()});
+
+        std::println("Candidate device: name={}, ver={} ({}.{}), type={}, score={}", deviceName, deviceVersion,
+                     props.deviceVersionMajor, props.deviceVersionMinor, props.deviceType, score);
+        std::println("Extensions: {}", props.extensions);
+
+        return {};
+    };
+
     for (auto& deviceWithProps : deviceWithPropsVec_) {
-        auto scoresRes = judge(deviceWithProps);
-        if (!scoresRes) return std::unexpected{std::move(scoresRes.error())};
-        scores.emplace_back(scoresRes.value(), std::ref(deviceWithProps));
+        auto scoreRes = judge(deviceWithProps);
+        if (!scoreRes) return std::unexpected{std::move(scoreRes.error())};
+
+        if constexpr (ENABLE_DEBUG) {
+            auto printRes = printDeviceInfo(deviceWithProps, scoreRes.value());
+            if (!printRes) return std::unexpected{std::move(printRes.error())};
+        }
+
+        scores.emplace_back(scoreRes.value(), std::ref(deviceWithProps));
     }
 
     if (scores.empty()) {
