@@ -23,8 +23,12 @@ std::expected<float, Error> defaultJudge(const DeviceWithProps& deviceWithProps)
         if (!imageSupportRes) return std::unexpected{std::move(imageSupportRes.error())};
         if (imageSupportRes.value() == CL_FALSE) return std::numeric_limits<float>::lowest();
 
-        float score = (float)props.extensions.size();
+        float score = 0;
+        if (props.realLocalMem) {
+            score = (float)props.localMemSize;
+        }
         if (props.deviceType & CL_DEVICE_TYPE_GPU) score *= 2;
+
         return score;
     };
 
