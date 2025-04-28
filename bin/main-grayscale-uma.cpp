@@ -36,11 +36,10 @@ int main() {
 
     clc::Devices devices = clc::Devices::create() | unwrap;
     clc::DeviceWithProps& deviceWithProps = (devices.select() | unwrap).get();
-    const clc::DeviceProps& deviceProps = deviceWithProps.getProps();
     clc::DeviceManager& deviceMgr = deviceWithProps.getManager();
     clc::ContextManager contextMgr = clc::ContextManager::create(deviceMgr) | unwrap;
     cl_queue_properties queueProps = CL_QUEUE_PROFILING_ENABLE;
-    if (deviceProps.supportOutOfOrderQueue) {
+    if (deviceWithProps.getProps().supportOutOfOrderQueue) {
         queueProps |= CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE;
     }
     clc::QueueManager queueMgr = clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap;
