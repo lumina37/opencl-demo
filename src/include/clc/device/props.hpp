@@ -44,6 +44,7 @@ public:
     bool realLocalMem;
     bool supportSubGroup;
     bool supportOutOfOrderQueue;
+    bool supportImage;
     bool supportReadWriteImage;
     bool supportImageFromBuffer;
     bool supportCoarseSVM;

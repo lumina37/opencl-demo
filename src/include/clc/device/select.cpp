@@ -18,10 +18,7 @@ namespace clc {
 std::expected<float, Error> defaultJudge(const DeviceWithProps& deviceWithProps) noexcept {
     const auto getDeviceScore = [](const cl_device_id device, const DeviceProps& props) -> std::expected<float, Error> {
         if (props.deviceVersionMajor < 2) return std::numeric_limits<float>::lowest();
-
-        auto imageSupportRes = getDeviceInfo<cl_bool>(device, CL_DEVICE_IMAGE_SUPPORT);
-        if (!imageSupportRes) return std::unexpected{std::move(imageSupportRes.error())};
-        if (imageSupportRes.value() == CL_FALSE) return std::numeric_limits<float>::lowest();
+        if (!props.supportImage) return std::numeric_limits<float>::lowest();
 
         float score = 0;
         if (props.realLocalMem) {

@@ -125,13 +125,19 @@ std::expected<DeviceProps, Error> DeviceProps::create(cl_device_id device) noexc
         props.supportOutOfOrderQueue = bool(queueProps & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
     }
 
-    auto readWriteImageCountRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS);
-    if (!readWriteImageCountRes) {
-        if (readWriteImageCountRes.error().code != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
-            return std::unexpected{std::move(readWriteImageCountRes.error())};
+    auto imageSupportRes = getDeviceInfo<cl_bool>(device, CL_DEVICE_IMAGE_SUPPORT);
+    if (!imageSupportRes) return std::unexpected{std::move(imageSupportRes.error())};
+    props.supportImage = bool(imageSupportRes.value());
+
+    if (props.supportImage) {
+        auto readWriteImageCountRes = getDeviceInfo<cl_uint>(device, CL_DEVICE_MAX_READ_WRITE_IMAGE_ARGS);
+        if (!readWriteImageCountRes) {
+            if (readWriteImageCountRes.error().code != CL_INVALID_VALUE || props.deviceVersion >= packVersion(2, 1)) {
+                return std::unexpected{std::move(readWriteImageCountRes.error())};
+            }
+        } else {
+            props.supportReadWriteImage = (bool)readWriteImageCountRes.value();
         }
-    } else {
-        props.supportReadWriteImage = (bool)readWriteImageCountRes.value();
     }
 
     auto svmCapsRes = getDeviceInfo<cl_device_svm_capabilities>(device, CL_DEVICE_SVM_CAPABILITIES);
