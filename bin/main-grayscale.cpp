@@ -65,8 +65,12 @@ int main() {
     std::array downloadEvs{std::cref(downloadEv)};
     clc::EventManager::wait(downloadEvs) | unwrap;
 
-    float elapsedTime = (float)dispatchEv.getElapsedTimeNs().value() / (float)1e6;
-    std::println("Dispatch elapsed time: {} ms", elapsedTime);
+    float uploadTime = (float)uploadEv.getElapsedTimeNs().value() / (float)1e6;
+    std::println("Upload elapsed time: {} ms", uploadTime);
+    float dispatchTime = (float)dispatchEv.getElapsedTimeNs().value() / (float)1e6;
+    std::println("Dispatch elapsed time: {} ms", dispatchTime);
+    float downloadTime = (float)downloadEv.getElapsedTimeNs().value() / (float)1e6;
+    std::println("Download elapsed time: {} ms", downloadTime);
 
     dstImage.saveTo("out.png") | unwrap;
 }
