@@ -14,6 +14,8 @@ namespace clc {
 namespace fs = std::filesystem;
 
 class StbImageManager {
+    StbImageManager(std::byte* image, Extent extent) noexcept;
+
 public:
     StbImageManager(StbImageManager&& rhs) noexcept;
     ~StbImageManager() noexcept;
@@ -21,20 +23,18 @@ public:
     [[nodiscard]] static std::expected<StbImageManager, Error> createFromPath(const fs::path& path) noexcept;
     [[nodiscard]] static std::expected<StbImageManager, Error> createWithExtent(Extent extent) noexcept;
 
-    std::span<std::byte> getImageSpan() const noexcept { return {image_, extent_.size()}; }
+    [[nodiscard]] std::span<std::byte> getImageSpan() const noexcept { return {image_, extent_.size()}; }
 
     template <typename Self>
     [[nodiscard]] auto&& getExtent(this Self&& self) noexcept {
         return std::forward_like<Self>(self).extent_;
     }
 
-    std::expected<void, Error> saveTo(const fs::path& path) const noexcept;
+    [[nodiscard]] std::expected<void, Error> saveTo(const fs::path& path) const noexcept;
 
     static constexpr cl_channel_order mapStbCompsToClChannelOrder(int comps) noexcept;
 
 private:
-    StbImageManager(std::byte* image, Extent extent) noexcept;
-
     std::byte* image_;
     Extent extent_;
 };

@@ -41,15 +41,15 @@ std::expected<StbImageManager, Error> StbImageManager::createFromPath(const fs::
     constexpr int comps = 4;
 
     std::byte* image = (std::byte*)stbi_load(path.string().c_str(), &width, &height, &oriComps, comps);
-    if (image == nullptr) return std::unexpected{1};
+    if (image == nullptr) return std::unexpected{Error{1, "Failed to load image"}};
 
-    Extent extent_{width, height, StbImageManager::mapStbCompsToClChannelOrder(comps), CL_UNORM_INT8};
-    return StbImageManager{image, extent_};
+    Extent extent{width, height, StbImageManager::mapStbCompsToClChannelOrder(comps), CL_UNORM_INT8};
+    return StbImageManager{image, extent};
 }
 
 std::expected<StbImageManager, Error> StbImageManager::createWithExtent(const Extent extent) noexcept {
     std::byte* image = (std::byte*)STBI_MALLOC(extent.size());
-    if (image == nullptr) return std::unexpected{1};
+    if (image == nullptr) return std::unexpected{Error{1}};
 
     return StbImageManager{image, extent};
 }
