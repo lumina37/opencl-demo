@@ -5,6 +5,7 @@
 #include <functional>
 #include <ranges>
 #include <string>
+#include <tuple>
 #include <utility>
 
 #include <CL/cl.h>
@@ -26,9 +27,7 @@ std::expected<DeviceProps, Error> DeviceProps::create(cl_device_id device) noexc
     auto deviceVersionRes = getDeviceInfo<char[]>(device, CL_DEVICE_VERSION);
     if (!deviceVersionRes) return std::unexpected{std::move(deviceVersionRes.error())};
     const auto deviceVersion = std::string_view{deviceVersionRes.value().data()};
-    auto [majorVersion, minorVersion] = parseVersion(deviceVersion);
-    props.deviceVersionMajor = majorVersion;
-    props.deviceVersionMinor = minorVersion;
+    std::tie(props.deviceVersionMajor, props.deviceVersionMinor) = parseVersion(deviceVersion);
     props.deviceVersion = packVersion(props.deviceVersionMajor, props.deviceVersionMinor);
 
     auto deviceTypeRes = getDeviceInfo<cl_device_type>(device, CL_DEVICE_TYPE);
