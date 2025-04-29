@@ -1,7 +1,3 @@
-#include <utility>
-
-#include <CL/cl.h>
-
 #include "clc/helper/math.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
