@@ -46,8 +46,10 @@ int main() {
 
     std::span<std::byte> oclSource;
     if (deviceWithProps.getProps().hasExtension("cl_khr_fp16")) {
+        std::println("use fp16 kernel");
         oclSource = kernel::grayscaleFp16Code;
     } else {
+        std::println("use fp32 kernel");
         oclSource = kernel::grayscaleFp32Code;
     }
     clc::KernelManager kernelMgr = clc::KernelManager::create(deviceMgr, contextMgr, oclSource) | unwrap;
