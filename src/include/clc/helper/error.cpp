@@ -2,8 +2,6 @@
 #include <string>
 #include <utility>
 
-#include "clc/common/info.hpp"
-
 #ifndef _TLCT_LIB_HEADER_ONLY
 #    include "clc/helper/error.hpp"
 #endif

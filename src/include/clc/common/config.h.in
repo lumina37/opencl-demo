@@ -1,3 +1,0 @@
-#pragma once
-
-#cmakedefine CLC_INCLUDE_BASE "@CLC_INCLUDE_BASE@"
