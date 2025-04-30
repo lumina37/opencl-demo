@@ -7,7 +7,7 @@
 #include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
-#    include "clc/device/select.hpp"
+#    include "clc/device/devices.hpp"
 #endif
 
 namespace clc {

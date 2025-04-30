@@ -7,9 +7,9 @@
 
 namespace clc {
 
-template <typename... Tv>
-    requires((CSupportGenKernelArg<Tv> || std::is_trivially_copyable_v<Tv>) && ...)
-[[nodiscard]] static constexpr inline auto genKernelArgs(Tv&... mgrs) noexcept {
+template <typename... TMgr>
+    requires((CSupportGenKernelArg<TMgr> || std::is_trivially_copyable_v<TMgr>) && ...)
+[[nodiscard]] static constexpr inline auto genKernelArgs(TMgr&... mgrs) noexcept {
     const auto genKernelArg = []<typename T>(T& mgr) {
         if constexpr (CSupportGenKernelArg<T>) {
             return mgr.genKernelArg();

@@ -29,8 +29,8 @@ private:
 public:
     [[nodiscard]] static std::expected<Devices_, Error> create() noexcept;
 
-    [[nodiscard]] std::expected<std::reference_wrapper<TDeviceWithProps>, Error> select(
-        const FnJudge& judge = defaultJudge) noexcept;
+    [[nodiscard]] std::expected<std::reference_wrapper<TDeviceWithProps>, Error> select(const FnJudge& judge) noexcept;
+    [[nodiscard]] std::expected<std::reference_wrapper<TDeviceWithProps>, Error> pickDefault() noexcept;
 
 private:
     std::vector<TDeviceWithProps> deviceWithPropsVec_;
@@ -119,8 +119,13 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<
     return std::move(maxScoreIt->attachment);
 }
 
+template <CDeviceProps TProps>
+std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<TProps>::pickDefault() noexcept {
+    return select(defaultJudge);
+}
+
 }  // namespace clc
 
 #ifdef _CLC_LIB_HEADER_ONLY
-#    include "clc/device/select.cpp"
+#    include "clc/device/devices.cpp"
 #endif
