@@ -44,6 +44,10 @@ public:
         const KernelManager& kernelMgr, Extent extent, GroupSize localGroupSize,
         std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;
 
+    [[nodiscard]] std::expected<EventManager, Error> downloadBufferTo(
+        const BufferManager& srcBufferMgr, std::span<std::byte> dst,
+        std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;
+
     [[nodiscard]] std::expected<EventManager, Error> downloadImageTo(
         const ImageManager& srcImageMgr, std::span<std::byte> dst, Extent extent,
         std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;

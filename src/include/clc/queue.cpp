@@ -98,6 +98,22 @@ std::expected<EventManager, Error> QueueManager::dispatch(
     return std::move(eventMgr);
 }
 
+std::expected<EventManager, Error> QueueManager::downloadBufferTo(
+    const BufferManager& srcBufferMgr, std::span<std::byte> dst,
+    std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept {
+    auto eventMgrRes = EventManager::create();
+    if (!eventMgrRes) return std::unexpected{std::move(eventMgrRes.error())};
+    EventManager& eventMgr = eventMgrRes.value();
+
+    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::leak) | rgs::to<std::vector>();
+
+    const cl_int clErr = clEnqueueReadBuffer(queue_, srcBufferMgr.getBuffer(), false, 0, dst.size(), dst.data(),
+                                             waitEvents.size(), waitEvents.data(), eventMgr.getPEvent());
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+
+    return std::move(eventMgr);
+}
+
 std::expected<EventManager, Error> QueueManager::downloadImageTo(
     const ImageManager& srcImageMgr, std::span<std::byte> dst, const Extent extent,
     std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept {
