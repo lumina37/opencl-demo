@@ -7,7 +7,7 @@
 #include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
-#    include "clc/device/devices.hpp"
+#    include "clc/device/set.hpp"
 #endif
 
 namespace clc {
@@ -27,6 +27,6 @@ std::expected<float, Error> defaultJudge(const DeviceWithProps_<DeviceProps>& de
     return score;
 }
 
-template class Devices_<DeviceProps>;
+template class DeviceSet_<DeviceProps>;
 
 }  // namespace clc

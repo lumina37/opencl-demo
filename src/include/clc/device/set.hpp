@@ -17,17 +17,17 @@ namespace clc {
 std::expected<float, Error> defaultJudge(const DeviceWithProps_<DeviceProps>& deviceWithProps) noexcept;
 
 template <CDeviceProps TProps_>
-class Devices_ {
+class DeviceSet_ {
 public:
     using TProps = TProps_;
     using TDeviceWithProps = DeviceWithProps_<TProps>;
     using FnJudge = std::expected<float, Error> (*)(const TDeviceWithProps&) noexcept;
 
 private:
-    Devices_(std::vector<TDeviceWithProps>&& deviceWithPropsVec) noexcept;
+    DeviceSet_(std::vector<TDeviceWithProps>&& deviceWithPropsVec) noexcept;
 
 public:
-    [[nodiscard]] static std::expected<Devices_, Error> create() noexcept;
+    [[nodiscard]] static std::expected<DeviceSet_, Error> create() noexcept;
 
     [[nodiscard]] std::expected<std::reference_wrapper<TDeviceWithProps>, Error> select(const FnJudge& judge) noexcept;
     [[nodiscard]] std::expected<std::reference_wrapper<TDeviceWithProps>, Error> pickDefault() noexcept;
@@ -37,11 +37,11 @@ private:
 };
 
 template <CDeviceProps TProps>
-Devices_<TProps>::Devices_(std::vector<TDeviceWithProps>&& deviceWithPropsVec) noexcept
+DeviceSet_<TProps>::DeviceSet_(std::vector<TDeviceWithProps>&& deviceWithPropsVec) noexcept
     : deviceWithPropsVec_(std::move(deviceWithPropsVec)) {}
 
 template <CDeviceProps TProps>
-std::expected<Devices_<TProps>, Error> Devices_<TProps>::create() noexcept {
+std::expected<DeviceSet_<TProps>, Error> DeviceSet_<TProps>::create() noexcept {
     auto platformsRes = getPlatformIDs();
     if (!platformsRes) return std::unexpected{std::move(platformsRes.error())};
     const auto& platforms = platformsRes.value();
@@ -65,11 +65,11 @@ std::expected<Devices_<TProps>, Error> Devices_<TProps>::create() noexcept {
         }
     }
 
-    return Devices_{std::move(deviceWithPropsVec)};
+    return DeviceSet_{std::move(deviceWithPropsVec)};
 }
 
 template <CDeviceProps TProps>
-std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<TProps>::select(
+std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet_<TProps>::select(
     const FnJudge& judge) noexcept {
     std::vector<Score<std::reference_wrapper<TDeviceWithProps>>> scores;
     scores.reserve(deviceWithPropsVec_.size());
@@ -120,12 +120,12 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<
 }
 
 template <CDeviceProps TProps>
-std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> Devices_<TProps>::pickDefault() noexcept {
+std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet_<TProps>::pickDefault() noexcept {
     return select(defaultJudge);
 }
 
 }  // namespace clc
 
 #ifdef _CLC_LIB_HEADER_ONLY
-#    include "clc/device/devices.cpp"
+#    include "clc/device/set.cpp"
 #endif
