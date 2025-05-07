@@ -57,22 +57,22 @@ class DeviceWithProps_ {
 public:
     using TProps = TProps_;
 
-    DeviceWithProps_(DeviceManager&& manager, TProps&& props) noexcept;
+    DeviceWithProps_(DeviceManager&& deviceMgr, TProps&& props) noexcept;
 
     template <typename Self>
-    [[nodiscard]] auto&& getManager(this Self&& self) noexcept {
-        return std::forward_like<Self>(self).manager_;
+    [[nodiscard]] auto&& getDeviceMgr(this Self&& self) noexcept {
+        return std::forward_like<Self>(self).deviceMgr_;
     }
     [[nodiscard]] const TProps& getProps() const noexcept { return props_; }
 
 private:
-    DeviceManager manager_;
+    DeviceManager deviceMgr_;
     TProps props_;
 };
 
 template <CDeviceProps TProps>
-DeviceWithProps_<TProps>::DeviceWithProps_(DeviceManager&& manager, TProps&& props) noexcept
-    : manager_(std::move(manager)), props_(std::move(props)) {}
+DeviceWithProps_<TProps>::DeviceWithProps_(DeviceManager&& deviceMgr, TProps&& props) noexcept
+    : deviceMgr_(std::move(deviceMgr)), props_(std::move(props)) {}
 
 }  // namespace clc
 

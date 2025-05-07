@@ -81,7 +81,7 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet
             return str.substr(0, lastCh + 1);
         };
 
-        const cl_device_id device = deviceWithProps.getManager().getDevice();
+        const cl_device_id device = deviceWithProps.getDeviceMgr().getDevice();
         const TProps& props = deviceWithProps.getProps();
 
         auto deviceNameRes = getDeviceInfo<char[]>(device, CL_DEVICE_NAME);

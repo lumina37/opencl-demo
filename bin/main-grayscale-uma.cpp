@@ -36,7 +36,7 @@ int main() {
 
     clc::DeviceSet devices = clc::DeviceSet::create() | unwrap;
     clc::DeviceWithProps& deviceWithProps = (devices.pickDefault() | unwrap).get();
-    clc::DeviceManager& deviceMgr = deviceWithProps.getManager();
+    clc::DeviceManager& deviceMgr = deviceWithProps.getDeviceMgr();
     clc::ContextManager contextMgr = clc::ContextManager::create(deviceMgr) | unwrap;
     cl_queue_properties queueProps = CL_QUEUE_PROFILING_ENABLE;
     if (deviceWithProps.getProps().supportOutOfOrderQueue) {
