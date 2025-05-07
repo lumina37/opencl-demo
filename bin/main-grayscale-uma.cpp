@@ -35,7 +35,7 @@ int main() {
     clc::StbImageManager dstImage = clc::StbImageManager::createWithExtent(srcImage.getExtent()) | unwrap;
 
     clc::DeviceSet devices = clc::DeviceSet::create() | unwrap;
-    clc::DeviceWithProps& deviceWithProps = (devices.pickDefault() | unwrap).get();
+    clc::DeviceWithProps& deviceWithProps = devices.pickDefault() | unwrap;
     clc::DeviceManager& deviceMgr = deviceWithProps.getDeviceMgr();
     clc::ContextManager contextMgr = clc::ContextManager::create(deviceMgr) | unwrap;
     cl_queue_properties queueProps = CL_QUEUE_PROFILING_ENABLE;
