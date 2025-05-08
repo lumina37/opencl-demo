@@ -24,7 +24,7 @@ public:
     using FnJudge = std::expected<float, Error> (*)(const TDeviceWithProps&) noexcept;
 
 private:
-    DeviceSet_(std::vector<TDeviceWithProps>&& deviceWithPropsVec) noexcept;
+    DeviceSet_(std::vector<TDeviceWithProps>&& devicesWithProps) noexcept;
 
 public:
     [[nodiscard]] static std::expected<DeviceSet_, Error> create() noexcept;
@@ -33,12 +33,12 @@ public:
     [[nodiscard]] std::expected<std::reference_wrapper<TDeviceWithProps>, Error> pickDefault() noexcept;
 
 private:
-    std::vector<TDeviceWithProps> deviceWithPropsVec_;
+    std::vector<TDeviceWithProps> devicesWithProps_;
 };
 
 template <CDeviceProps TProps>
-DeviceSet_<TProps>::DeviceSet_(std::vector<TDeviceWithProps>&& deviceWithPropsVec) noexcept
-    : deviceWithPropsVec_(std::move(deviceWithPropsVec)) {}
+DeviceSet_<TProps>::DeviceSet_(std::vector<TDeviceWithProps>&& devicesWithProps) noexcept
+    : devicesWithProps_(std::move(devicesWithProps)) {}
 
 template <CDeviceProps TProps>
 std::expected<DeviceSet_<TProps>, Error> DeviceSet_<TProps>::create() noexcept {
@@ -46,7 +46,7 @@ std::expected<DeviceSet_<TProps>, Error> DeviceSet_<TProps>::create() noexcept {
     if (!platformsRes) return std::unexpected{std::move(platformsRes.error())};
     const auto& platforms = platformsRes.value();
 
-    std::vector<TDeviceWithProps> deviceWithPropsVec;
+    std::vector<TDeviceWithProps> devicesWithProps;
     for (const auto& platform : platforms) {
         auto devicesRes = getDeviceIDs(platform);
         if (!devicesRes) return std::unexpected{std::move(devicesRes.error())};
@@ -61,18 +61,18 @@ std::expected<DeviceSet_<TProps>, Error> DeviceSet_<TProps>::create() noexcept {
             if (!devicePropsRes) return std::unexpected{std::move(devicePropsRes.error())};
             auto& deviceProps = devicePropsRes.value();
 
-            deviceWithPropsVec.emplace_back(std::move(deviceMgr), std::move(deviceProps));
+            devicesWithProps.emplace_back(std::move(deviceMgr), std::move(deviceProps));
         }
     }
 
-    return DeviceSet_{std::move(deviceWithPropsVec)};
+    return DeviceSet_{std::move(devicesWithProps)};
 }
 
 template <CDeviceProps TProps>
 std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet_<TProps>::select(
     const FnJudge& judge) noexcept {
     std::vector<Score<std::reference_wrapper<TDeviceWithProps>>> scores;
-    scores.reserve(deviceWithPropsVec_.size());
+    scores.reserve(devicesWithProps_.size());
 
     const auto printDeviceInfo = [](const TDeviceWithProps& deviceWithProps,
                                     const float score) -> std::expected<void, Error> {
@@ -99,7 +99,7 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet
         return {};
     };
 
-    for (auto& deviceWithProps : deviceWithPropsVec_) {
+    for (auto& deviceWithProps : devicesWithProps_) {
         auto scoreRes = judge(deviceWithProps);
         if (!scoreRes) return std::unexpected{std::move(scoreRes.error())};
 
