@@ -24,6 +24,7 @@ public:
     [[nodiscard]] static std::expected<DeviceProps, Error> create(cl_device_id device) noexcept;
 
     [[nodiscard]] bool hasExtension(std::string_view extName) const noexcept;
+    [[nodiscard]] std::expected<float, Error> score() const noexcept;
 
     // Members
     cl_device_type deviceType;

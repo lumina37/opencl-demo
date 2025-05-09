@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <expected>
 #include <functional>
+#include <limits>
 #include <ranges>
 #include <string>
 #include <tuple>
@@ -159,6 +160,19 @@ std::expected<DeviceProps, Error> DeviceProps::create(cl_device_id device) noexc
 
 bool DeviceProps::hasExtension(std::string_view extName) const noexcept {
     return rgs::binary_search(extensions, extName);
+}
+
+std::expected<float, Error> DeviceProps::score() const noexcept {
+    if (deviceVersionMajor < 2) return std::numeric_limits<float>::lowest();
+    if (!supportImage) return std::numeric_limits<float>::lowest();
+
+    float score = 0;
+    if (realLocalMem) {
+        score = (float)localMemSize;
+    }
+    if (deviceType & CL_DEVICE_TYPE_GPU) score *= 2;
+
+    return score;
 }
 
 template class DeviceWithProps_<DeviceProps>;
