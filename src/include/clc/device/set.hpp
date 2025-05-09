@@ -24,8 +24,6 @@ public:
 private:
     DeviceSet_(std::vector<TDeviceWithProps>&& devicesWithProps) noexcept;
 
-    [[nodiscard]] static std::expected<float, Error> defaultJudge(const TDeviceWithProps& deviceWithProps) noexcept;
-
 public:
     [[nodiscard]] static std::expected<DeviceSet_, Error> create() noexcept;
 
@@ -39,11 +37,6 @@ private:
 template <CDeviceProps TProps>
 DeviceSet_<TProps>::DeviceSet_(std::vector<TDeviceWithProps>&& devicesWithProps) noexcept
     : devicesWithProps_(std::move(devicesWithProps)) {}
-
-template <CDeviceProps TProps>
-std::expected<float, Error> DeviceSet_<TProps>::defaultJudge(const TDeviceWithProps& deviceWithProps) noexcept {
-    return deviceWithProps.getProps().score();
-}
 
 template <CDeviceProps TProps>
 std::expected<DeviceSet_<TProps>, Error> DeviceSet_<TProps>::create() noexcept {
@@ -126,6 +119,9 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet
 
 template <CDeviceProps TProps>
 std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet_<TProps>::selectDefault() noexcept {
+    constexpr auto defaultJudge = [](const TDeviceWithProps& deviceWithProps) noexcept {
+        return deviceWithProps.getProps().score();
+    };
     return select(defaultJudge);
 }
 
