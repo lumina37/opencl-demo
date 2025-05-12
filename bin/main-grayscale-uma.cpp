@@ -50,7 +50,7 @@ int main() {
 
     clc::KernelManager kernelMgr =
         clc::KernelManager::create(deviceMgr, contextMgr, kernel::grayscaleFp32Code) | unwrap;
-    std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
+    const std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
     kernelMgr.setKernelArgs(kernelArgs) | unwrap;
 
     clc::EventManager dispatchEv = queueMgr.dispatch(kernelMgr, dstImage.getExtent(), {16, 16}, {}) | unwrap;

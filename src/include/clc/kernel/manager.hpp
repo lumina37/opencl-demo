@@ -21,15 +21,15 @@ public:
     ~KernelManager() noexcept;
 
     [[nodiscard]] static std::expected<KernelManager, Error> create(DeviceManager& deviceMgr,
-                                                                     ContextManager& contextMgr,
-                                                                     std::span<std::byte> code) noexcept;
+                                                                    ContextManager& contextMgr,
+                                                                    std::span<std::byte> code) noexcept;
 
     template <typename Self>
     [[nodiscard]] auto&& getKernel(this Self&& self) noexcept {
         return std::forward_like<Self>(self).kernel_;
     }
 
-    [[nodiscard]] std::expected<void, Error> setKernelArgs(std::span<KernelArg> args) noexcept;
+    [[nodiscard]] std::expected<void, Error> setKernelArgs(std::span<const KernelArg> args) noexcept;
 
 private:
     cl_program program_;

@@ -53,7 +53,7 @@ int main() {
         oclSource = kernel::grayscaleFp32Code;
     }
     clc::KernelManager kernelMgr = clc::KernelManager::create(deviceMgr, contextMgr, oclSource) | unwrap;
-    std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
+    const std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
     kernelMgr.setKernelArgs(kernelArgs) | unwrap;
 
     clc::EventManager uploadEv =

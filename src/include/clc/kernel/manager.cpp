@@ -65,7 +65,7 @@ std::expected<KernelManager, Error> KernelManager::create(DeviceManager& deviceM
     return KernelManager{std::move(program), std::move(kernel)};
 }
 
-std::expected<void, Error> KernelManager::setKernelArgs(const std::span<KernelArg> args) noexcept {
+std::expected<void, Error> KernelManager::setKernelArgs(const std::span<const KernelArg> args) noexcept {
     for (const auto& [idx, arg] : rgs::views::enumerate(args)) {
         cl_int clErr = clSetKernelArg(kernel_, idx, arg.size, arg.ptr);
         if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
