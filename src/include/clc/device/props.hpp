@@ -49,8 +49,10 @@ public:
     bool supportReadWriteImage;
     bool supportImageFromBuffer;
     bool supportCoarseSVM;
-    std::string extensionStr;
     std::vector<std::string_view> extensions;
+
+private:
+    std::string extensionStr;
 };
 
 template <CDeviceProps TProps_>
