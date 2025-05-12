@@ -11,7 +11,7 @@
 namespace clc {
 
 class EventManager {
-    EventManager(cl_event&& event) noexcept;
+    EventManager(cl_event event) noexcept;
 
 public:
     EventManager() noexcept = default;

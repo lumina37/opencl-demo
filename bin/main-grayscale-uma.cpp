@@ -1,34 +1,12 @@
-#include <algorithm>
 #include <array>
-#include <expected>
 #include <filesystem>
-#include <format>
-#include <iostream>
 #include <print>
 
 #include "clc.hpp"
 #include "opencl/kernel.hpp"
+#include "clc_bin_helper.hpp"
 
 namespace fs = std::filesystem;
-
-class Unwrap {
-public:
-    template <typename T>
-    friend auto operator|(std::expected<T, clc::Error>&& src, const Unwrap& _) {
-        if (!src.has_value()) {
-            const auto& err = src.error();
-            const fs::path filePath{err.source.file_name()};
-            const std::string fileName = filePath.filename().string();
-            std::println(std::cerr, "{}:{} msg={} clErr={}", fileName, err.source.line(), err.msg, err.code);
-            std::exit(err.code);
-        }
-        if constexpr (!std::is_void_v<T>) {
-            return std::forward_like<T>(src.value());
-        }
-    }
-};
-
-constexpr auto unwrap = Unwrap();
 
 int main() {
     clc::StbImageManager srcImage = clc::StbImageManager::createFromPath("in.png") | unwrap;

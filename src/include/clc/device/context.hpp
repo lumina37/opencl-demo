@@ -9,10 +9,10 @@
 namespace clc {
 
 class ContextManager {
-    ContextManager(cl_context&& context) noexcept;
+    ContextManager(cl_context context) noexcept;
 
 public:
-    ContextManager(ContextManager&&) noexcept;
+    ContextManager(ContextManager&& rhs) noexcept;
     ~ContextManager() noexcept;
 
     [[nodiscard]] static std::expected<ContextManager, Error> create(DeviceManager& deviceMgr) noexcept;

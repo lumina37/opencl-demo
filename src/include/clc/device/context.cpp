@@ -12,7 +12,7 @@
 
 namespace clc {
 
-ContextManager::ContextManager(cl_context&& context) noexcept : context_(context) {}
+ContextManager::ContextManager(cl_context context) noexcept : context_(context) {}
 
 ContextManager::ContextManager(ContextManager&& rhs) noexcept { context_ = std::exchange(rhs.context_, nullptr); }
 
@@ -29,7 +29,7 @@ std::expected<ContextManager, Error> ContextManager::create(DeviceManager& devic
     cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
-    return ContextManager{std::move(context)};
+    return ContextManager{context};
 }
 
 }  // namespace clc

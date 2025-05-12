@@ -20,7 +20,7 @@ namespace clc {
 
 namespace rgs = std::ranges;
 
-QueueManager::QueueManager(cl_command_queue&& queue) noexcept : queue_(queue) {}
+QueueManager::QueueManager(cl_command_queue queue) noexcept : queue_(queue) {}
 
 QueueManager::QueueManager(QueueManager&& rhs) noexcept { queue_ = std::exchange(rhs.queue_, nullptr); }
 
@@ -41,7 +41,7 @@ std::expected<QueueManager, Error> QueueManager::createWithProps(DeviceManager& 
     cl_command_queue queue = clCreateCommandQueueWithProperties(context, device, queuePropArray.data(), &clErr);
 
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
-    return QueueManager{std::move(queue)};
+    return QueueManager{queue};
 }
 
 std::expected<EventManager, Error> QueueManager::uploadBufferFrom(

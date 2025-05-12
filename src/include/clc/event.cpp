@@ -16,7 +16,7 @@ namespace clc {
 
 namespace rgs = std::ranges;
 
-EventManager::EventManager(cl_event&& event) noexcept : event_(std::move(event)) {}
+EventManager::EventManager(cl_event event) noexcept : event_(event) {}
 
 EventManager::EventManager(EventManager&& rhs) noexcept : event_(std::exchange(rhs.event_, nullptr)) {}
 

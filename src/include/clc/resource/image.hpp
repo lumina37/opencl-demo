@@ -13,7 +13,7 @@
 namespace clc {
 
 class ImageManager {
-    ImageManager(cl_mem&& image) noexcept;
+    ImageManager(cl_mem image) noexcept;
 
 public:
     ImageManager(ImageManager&& rhs) noexcept;

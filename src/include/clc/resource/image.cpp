@@ -13,7 +13,7 @@
 
 namespace clc {
 
-ImageManager::ImageManager(cl_mem&& image) noexcept : image_(image) {}
+ImageManager::ImageManager(cl_mem image) noexcept : image_(image) {}
 
 ImageManager::ImageManager(ImageManager&& rhs) noexcept { image_ = std::exchange(rhs.image_, nullptr); }
 
@@ -40,7 +40,7 @@ std::expected<ImageManager, Error> ImageManager::create(ContextManager& contextM
     cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, nullptr, &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
-    return ImageManager{std::move(image)};
+    return ImageManager{image};
 }
 
 std::expected<ImageManager, Error> ImageManager::createWrite(ContextManager& contextMgr, const Extent extent) noexcept {
@@ -71,7 +71,7 @@ std::expected<ImageManager, Error> ImageManager::createReadUMA(ContextManager& c
     cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, hostMem.data(), &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
-    return ImageManager{std::move(image)};
+    return ImageManager{image};
 }
 
 std::expected<ImageManager, Error> ImageManager::createWriteUMA(ContextManager& contextMgr, Extent extent) noexcept {
@@ -92,7 +92,7 @@ std::expected<ImageManager, Error> ImageManager::createWriteUMA(ContextManager& 
     cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, nullptr, &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
-    return ImageManager{std::move(image)};
+    return ImageManager{image};
 }
 
 }  // namespace clc

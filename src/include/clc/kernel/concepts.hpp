@@ -13,4 +13,4 @@ concept CSupportGenKernelArg = requires {
     };
 };
 
-}  // namespace vkc
+}  // namespace clc

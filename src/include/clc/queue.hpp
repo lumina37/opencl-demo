@@ -20,7 +20,7 @@ struct GroupSize {
 };
 
 class QueueManager {
-    QueueManager(cl_command_queue&& queue) noexcept;
+    QueueManager(cl_command_queue queue) noexcept;
 
 public:
     QueueManager(QueueManager&&) noexcept;

@@ -9,7 +9,7 @@
 namespace clc {
 
 class DeviceManager {
-    DeviceManager(cl_platform_id&& platform, cl_device_id&& device) noexcept;
+    DeviceManager(cl_platform_id platform, cl_device_id device) noexcept;
 
 public:
     [[nodiscard]] static std::expected<DeviceManager, Error> create(cl_platform_id platform,

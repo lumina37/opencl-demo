@@ -19,7 +19,7 @@ namespace clc {
 
 namespace rgs = std::ranges;
 
-KernelManager::KernelManager(cl_program&& program, cl_kernel&& kernel) noexcept : program_(program), kernel_(kernel) {}
+KernelManager::KernelManager(cl_program program, cl_kernel kernel) noexcept : program_(program), kernel_(kernel) {}
 
 KernelManager::KernelManager(KernelManager&& rhs) noexcept {
     program_ = std::exchange(rhs.program_, nullptr);
@@ -62,7 +62,7 @@ std::expected<KernelManager, Error> KernelManager::create(DeviceManager& deviceM
     cl_kernel kernel = clCreateKernel(program, "clcmain", &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
-    return KernelManager{std::move(program), std::move(kernel)};
+    return KernelManager{program, kernel};
 }
 
 std::expected<void, Error> KernelManager::setKernelArgs(const std::span<const KernelArg> args) noexcept {

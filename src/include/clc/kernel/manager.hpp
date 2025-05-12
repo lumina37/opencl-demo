@@ -14,7 +14,7 @@
 namespace clc {
 
 class KernelManager {
-    KernelManager(cl_program&& program, cl_kernel&& kernel) noexcept;
+    KernelManager(cl_program program, cl_kernel kernel) noexcept;
 
 public:
     KernelManager(KernelManager&& rhs) noexcept;
