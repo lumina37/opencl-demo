@@ -69,5 +69,5 @@ private:
 }  // namespace clc
 
 #ifdef _CLC_LIB_HEADER_ONLY
-#    include "clc/device/queue.cpp"
+#    include "clc/queue.cpp"
 #endif

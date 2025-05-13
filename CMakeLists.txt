@@ -6,6 +6,9 @@ project(OpenCLCemo
         LANGUAGES CXX
 )
 
+# Compile Options
+option(CLC_VERBOSE_WARNING "Show verbose compiler warnings" OFF)
+
 # Dependencies
 include(FetchContent)
 

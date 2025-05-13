@@ -20,6 +20,6 @@ public:
 
 }  // namespace clc
 
-#ifdef _TLCT_LIB_HEADER_ONLY
+#ifdef _CLC_LIB_HEADER_ONLY
 #    include "clc/helper/error.cpp"
 #endif

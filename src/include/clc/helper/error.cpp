@@ -2,7 +2,7 @@
 #include <string>
 #include <utility>
 
-#ifndef _TLCT_LIB_HEADER_ONLY
+#ifndef _CLC_LIB_HEADER_ONLY
 #    include "clc/helper/error.hpp"
 #endif
 

@@ -43,10 +43,6 @@ namespace clc {
 
     const int bpp = comps * bpc;
     return bpp;
-};
+}
 
 }  // namespace clc
-
-#ifdef _CLC_LIB_HEADER_ONLY
-#    include "clc/helper/format.cpp"
-#endif
