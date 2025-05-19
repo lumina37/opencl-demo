@@ -33,7 +33,7 @@ std::expected<std::vector<cl_platform_id>, Error> getPlatformIDs() noexcept;
 std::expected<std::vector<cl_device_id>, Error> getDeviceIDs(cl_platform_id platform) noexcept;
 
 template <typename Tv>
-    requires !std::is_array_v<Tv> && std::is_trivially_copyable_v<Tv>
+    requires(!std::is_unbounded_array_v<Tv>)
 std::expected<Tv, Error> getPlatformInfo(const cl_platform_id& platform, const cl_device_info& key) {
     Tv value;
     const cl_int clErr = clGetPlatformInfo(platform, key, sizeof(Tv), &value, nullptr);
@@ -58,7 +58,7 @@ std::expected<std::vector<TElem>, Error> getPlatformInfo(const cl_platform_id& p
 }
 
 template <typename Tv>
-    requires !std::is_unbounded_array_v<Tv> && std::is_trivially_copyable_v<Tv>
+    requires(!std::is_unbounded_array_v<Tv>)
 std::expected<Tv, Error> getDeviceInfo(const cl_device_id& device, const cl_device_info& key) {
     Tv value;
     const cl_int clErr = clGetDeviceInfo(device, key, sizeof(Tv), &value, nullptr);

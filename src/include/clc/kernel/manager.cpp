@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <expected>
 #include <iostream>
+#include <memory>
 #include <print>
 #include <ranges>
 #include <utility>
