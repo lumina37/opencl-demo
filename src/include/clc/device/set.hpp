@@ -67,8 +67,8 @@ std::expected<DeviceSet_<TProps>, Error> DeviceSet_<TProps>::create() noexcept {
 }
 
 template <CDeviceProps TProps>
-std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet_<TProps>::select(
-    const FnJudge& judge) noexcept {
+auto DeviceSet_<TProps>::select(const FnJudge& judge) noexcept
+    -> std::expected<std::reference_wrapper<TDeviceWithProps>, Error> {
     std::vector<Score<std::reference_wrapper<TDeviceWithProps>>> scores;
     scores.reserve(devicesWithProps_.size());
 
@@ -118,7 +118,7 @@ std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet
 }
 
 template <CDeviceProps TProps>
-std::expected<std::reference_wrapper<DeviceWithProps_<TProps>>, Error> DeviceSet_<TProps>::selectDefault() noexcept {
+auto DeviceSet_<TProps>::selectDefault() noexcept -> std::expected<std::reference_wrapper<TDeviceWithProps>, Error> {
     constexpr auto defaultJudge = [](const TDeviceWithProps& deviceWithProps) noexcept {
         return deviceWithProps.getProps().score();
     };
