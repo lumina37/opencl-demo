@@ -2,8 +2,8 @@
 #include <filesystem>
 #include <print>
 
+#include "../kernel/kernel.hpp"
 #include "clc.hpp"
-#include "opencl/kernel.hpp"
 #include "clc_bin_helper.hpp"
 
 namespace fs = std::filesystem;
@@ -28,10 +28,10 @@ int main() {
     std::span<std::byte> oclSource;
     if (deviceWithProps.getProps().hasExtension("cl_khr_fp16")) {
         std::println("use fp16 kernel");
-        oclSource = kernel::grayscaleFp16Code;
+        oclSource = kernel::grayscale::fp16::code;
     } else {
         std::println("use fp32 kernel");
-        oclSource = kernel::grayscaleFp32Code;
+        oclSource = kernel::grayscale::fp32::code;
     }
     clc::KernelManager kernelMgr = clc::KernelManager::create(deviceMgr, contextMgr, oclSource) | unwrap;
     const std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);

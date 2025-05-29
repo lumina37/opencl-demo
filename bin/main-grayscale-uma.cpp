@@ -2,8 +2,8 @@
 #include <filesystem>
 #include <print>
 
+#include "../kernel/kernel.hpp"
 #include "clc.hpp"
-#include "opencl/kernel.hpp"
 #include "clc_bin_helper.hpp"
 
 namespace fs = std::filesystem;
@@ -27,7 +27,7 @@ int main() {
     clc::ImageManager dstImageMgr = clc::ImageManager::createWriteUMA(contextMgr, dstImage.getExtent()) | unwrap;
 
     clc::KernelManager kernelMgr =
-        clc::KernelManager::create(deviceMgr, contextMgr, kernel::grayscaleFp32Code) | unwrap;
+        clc::KernelManager::create(deviceMgr, contextMgr, kernel::grayscale::fp32::code) | unwrap;
     const std::array kernelArgs = clc::genKernelArgs(srcImageMgr, dstImageMgr);
     kernelMgr.setKernelArgs(kernelArgs) | unwrap;
 

@@ -1,6 +1,6 @@
 set(_CLC_OPENCL_KERNELS
-        grayscale_fp32
-        grayscale_fp16
+        grayscale/fp32
+        grayscale/fp16
 )
 set(_CLC_OPENCL_HEADERS)
 
@@ -13,7 +13,7 @@ function(clc_add_kernel name)
     add_custom_command(
             OUTPUT ${__CLC_OUT_PATH}
             COMMAND ${CMAKE_COMMAND} -DCLC_IN=${__CLC_IN_PATH} -DCLC_OUT=${__CLC_OUT_PATH} -P ${CMAKE_CURRENT_SOURCE_DIR}/cl2h.cmake
-            DEPENDS ${__CLC_IN_PATH}
+            MAIN_DEPENDENCY ${__CLC_IN_PATH}
             COMMENT "Convert OpenCL kernel to header - ${__CLC_IN_PATH}"
     )
 endfunction()
@@ -23,7 +23,11 @@ foreach (__CLC_OPENCL_KERNEL ${_CLC_OPENCL_KERNELS})
 endforeach ()
 
 add_custom_target(_clc-shader DEPENDS ${_CLC_OPENCL_HEADERS})
-add_library(clc-shader INTERFACE)
+
+file(GLOB_RECURSE _CLC_KERNEL_SRCS "*.cpp")
+
+add_library(clc-shader STATIC ${_CLC_KERNEL_SRCS})
 add_dependencies(clc-shader _clc-shader)
-target_include_directories(clc-shader INTERFACE .)
+target_compile_features(clc-shader PUBLIC cxx_std_23)
+target_include_directories(clc-shader PUBLIC .)
 add_library(clc::shader ALIAS clc-shader)
