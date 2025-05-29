@@ -51,7 +51,7 @@ std::expected<EventManager, Error> QueueManager::uploadBufferFrom(
     if (!eventMgrRes) return std::unexpected{std::move(eventMgrRes.error())};
     EventManager& eventMgr = eventMgrRes.value();
 
-    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::leak) | rgs::to<std::vector>();
+    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::exposeEvent) | rgs::to<std::vector>();
 
     const cl_int clErr = clEnqueueWriteBuffer(queue_, dstBufferMgr.getBuffer(), false, 0, src.size(), src.data(),
                                               waitEvents.size(), waitEvents.data(), eventMgr.getPEvent());
@@ -67,7 +67,7 @@ std::expected<EventManager, Error> QueueManager::uploadImageFrom(
     if (!eventMgrRes) return std::unexpected{std::move(eventMgrRes.error())};
     EventManager& eventMgr = eventMgrRes.value();
 
-    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::leak) | rgs::to<std::vector>();
+    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::exposeEvent) | rgs::to<std::vector>();
 
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
@@ -86,7 +86,7 @@ std::expected<EventManager, Error> QueueManager::dispatch(
     if (!eventMgrRes) return std::unexpected{std::move(eventMgrRes.error())};
     EventManager& eventMgr = eventMgrRes.value();
 
-    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::leak) | rgs::to<std::vector>();
+    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::exposeEvent) | rgs::to<std::vector>();
 
     const GroupSize globalGroupSize{(extent.width() + localGroupSize.x - 1) / localGroupSize.x * localGroupSize.x,
                                     (extent.height() + localGroupSize.y - 1) / localGroupSize.y * localGroupSize.y};
@@ -105,7 +105,7 @@ std::expected<EventManager, Error> QueueManager::downloadBufferTo(
     if (!eventMgrRes) return std::unexpected{std::move(eventMgrRes.error())};
     EventManager& eventMgr = eventMgrRes.value();
 
-    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::leak) | rgs::to<std::vector>();
+    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::exposeEvent) | rgs::to<std::vector>();
 
     const cl_int clErr = clEnqueueReadBuffer(queue_, srcBufferMgr.getBuffer(), false, 0, dst.size(), dst.data(),
                                              waitEvents.size(), waitEvents.data(), eventMgr.getPEvent());
@@ -121,7 +121,7 @@ std::expected<EventManager, Error> QueueManager::downloadImageTo(
     if (!eventMgrRes) return std::unexpected{std::move(eventMgrRes.error())};
     EventManager& eventMgr = eventMgrRes.value();
 
-    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::leak) | rgs::to<std::vector>();
+    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::exposeEvent) | rgs::to<std::vector>();
 
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
@@ -138,7 +138,7 @@ std::expected<std::span<std::byte>, Error> QueueManager::mmapForHostRead(
     std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept {
     cl_int clErr;
 
-    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::leak) | rgs::to<std::vector>();
+    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::exposeEvent) | rgs::to<std::vector>();
 
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};
@@ -156,7 +156,7 @@ std::expected<std::span<std::byte>, Error> QueueManager::mmapForHostWrite(
     std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept {
     cl_int clErr;
 
-    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::leak) | rgs::to<std::vector>();
+    auto waitEvents = waitEventMgrs | rgs::views::transform(EventManager::exposeEvent) | rgs::to<std::vector>();
 
     const std::array<size_t, 3> origin{0, 0, 0};
     const std::array<size_t, 3> region{(size_t)extent.width(), (size_t)extent.height(), 1};

@@ -30,13 +30,13 @@ std::expected<EventManager, Error> EventManager::create() noexcept { return {}; 
 
 std::expected<void, Error> EventManager::wait(
     std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept {
-    auto waitEvents = waitEventMgrs | rgs::views::transform(leak) | rgs::to<std::vector>();
+    auto waitEvents = waitEventMgrs | rgs::views::transform(exposeEvent) | rgs::to<std::vector>();
     const cl_int clErr = clWaitForEvents(waitEvents.size(), waitEvents.data());
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
     return {};
 }
 
-cl_event EventManager::leak(const EventManager& eventMgr) noexcept { return eventMgr.getEvent(); }
+cl_event EventManager::exposeEvent(const EventManager& eventMgr) noexcept { return eventMgr.getEvent(); }
 
 std::expected<cl_ulong, Error> EventManager::getElapsedTimeNs() const noexcept {
     cl_int clErr;

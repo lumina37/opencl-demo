@@ -23,7 +23,7 @@ public:
     [[nodiscard]] static std::expected<void, Error> wait(
         std::span<std::reference_wrapper<const EventManager>> eventMgrs) noexcept;
 
-    [[nodiscard]] static cl_event leak(const EventManager& eventMgr) noexcept;
+    [[nodiscard]] static cl_event exposeEvent(const EventManager& eventMgr) noexcept;
 
     [[nodiscard]] cl_event getEvent() const noexcept { return event_; }
     [[nodiscard]] cl_event* getPEvent() noexcept { return &event_; }
