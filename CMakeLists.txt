@@ -32,4 +32,4 @@ endfunction()
 # Sources
 add_subdirectory(src)
 add_subdirectory(kernel)
-add_subdirectory(bin)
+add_subdirectory(samples)
