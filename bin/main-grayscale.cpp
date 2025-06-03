@@ -2,9 +2,9 @@
 #include <filesystem>
 #include <print>
 
-#include "../kernel/kernel.hpp"
 #include "clc.hpp"
 #include "clc_bin_helper.hpp"
+#include "kernel.hpp"
 
 namespace fs = std::filesystem;
 
@@ -21,6 +21,9 @@ int main() {
         queueProps |= CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE;
     }
     clc::QueueManager queueMgr = clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap;
+
+    Timer overallTimer;
+    overallTimer.begin();
 
     clc::ImageManager srcImageMgr = clc::ImageManager::createRead(contextMgr, srcImage.getExtent()) | unwrap;
     clc::ImageManager dstImageMgr = clc::ImageManager::createWrite(contextMgr, dstImage.getExtent()) | unwrap;
@@ -47,12 +50,16 @@ int main() {
     std::array downloadEvs{std::cref(downloadEv)};
     clc::EventManager::wait(downloadEvs) | unwrap;
 
+    overallTimer.end();
+
     float uploadTime = (float)uploadEv.getElapsedTimeNs().value() / (float)1e6;
     std::println("Upload elapsed time: {} ms", uploadTime);
     float dispatchTime = (float)dispatchEv.getElapsedTimeNs().value() / (float)1e6;
     std::println("Dispatch elapsed time: {} ms", dispatchTime);
     float downloadTime = (float)downloadEv.getElapsedTimeNs().value() / (float)1e6;
     std::println("Download elapsed time: {} ms", downloadTime);
+    float overallTime = overallTimer.durationMs();
+    std::println("Overall elapsed time: {} ms", overallTime);
 
     dstImage.saveTo("out.png") | unwrap;
 }

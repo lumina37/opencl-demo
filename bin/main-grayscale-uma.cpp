@@ -2,9 +2,9 @@
 #include <filesystem>
 #include <print>
 
-#include "../kernel/kernel.hpp"
 #include "clc.hpp"
 #include "clc_bin_helper.hpp"
+#include "kernel.hpp"
 
 namespace fs = std::filesystem;
 
@@ -22,6 +22,9 @@ int main() {
     }
     clc::QueueManager queueMgr = clc::QueueManager::createWithProps(deviceMgr, contextMgr, queueProps) | unwrap;
 
+    Timer overallTimer;
+    overallTimer.begin();
+
     clc::ImageManager srcImageMgr =
         clc::ImageManager::createReadUMA(contextMgr, srcImage.getExtent(), srcImage.getImageSpan()) | unwrap;
     clc::ImageManager dstImageMgr = clc::ImageManager::createWriteUMA(contextMgr, dstImage.getExtent()) | unwrap;
@@ -37,8 +40,12 @@ int main() {
     std::copy(dstSpan.begin(), dstSpan.end(), dstImage.getImageSpan().begin());
     queueMgr.unmap(dstImageMgr, dstSpan) | unwrap;
 
+    overallTimer.end();
+
     float elapsedTime = (float)dispatchEv.getElapsedTimeNs().value() / (float)1e6;
     std::println("Dispatch elapsed time: {} ms", elapsedTime);
+    float overallTime = overallTimer.durationMs();
+    std::println("Overall elapsed time: {} ms", overallTime);
 
     dstImage.saveTo("out.png") | unwrap;
 }
