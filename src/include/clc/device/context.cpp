@@ -3,7 +3,7 @@
 
 #include <CL/cl.h>
 
-#include "clc/device/manager.hpp"
+#include "clc/device/box.hpp"
 #include "clc/helper/error.hpp"
 
 #ifndef _CLC_LIB_HEADER_ONLY
@@ -12,24 +12,24 @@
 
 namespace clc {
 
-ContextManager::ContextManager(cl_context context) noexcept : context_(context) {}
+ContextBox::ContextBox(cl_context context) noexcept : context_(context) {}
 
-ContextManager::ContextManager(ContextManager&& rhs) noexcept { context_ = std::exchange(rhs.context_, nullptr); }
+ContextBox::ContextBox(ContextBox&& rhs) noexcept { context_ = std::exchange(rhs.context_, nullptr); }
 
-ContextManager::~ContextManager() noexcept {
+ContextBox::~ContextBox() noexcept {
     if (context_ == nullptr) return;
     clReleaseContext(context_);
     context_ = nullptr;
 }
 
-std::expected<ContextManager, Error> ContextManager::create(DeviceManager& deviceMgr) noexcept {
+std::expected<ContextBox, Error> ContextBox::create(DeviceBox& deviceBox) noexcept {
     cl_int clErr;
 
-    auto device = deviceMgr.getDevice();
+    auto device = deviceBox.getDevice();
     cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
-    return ContextManager{context};
+    return ContextBox{context};
 }
 
 }  // namespace clc

@@ -16,29 +16,28 @@ namespace clc {
 
 namespace rgs = std::ranges;
 
-EventManager::EventManager(cl_event event) noexcept : event_(event) {}
+EventBox::EventBox(cl_event event) noexcept : event_(event) {}
 
-EventManager::EventManager(EventManager&& rhs) noexcept : event_(std::exchange(rhs.event_, nullptr)) {}
+EventBox::EventBox(EventBox&& rhs) noexcept : event_(std::exchange(rhs.event_, nullptr)) {}
 
-EventManager::~EventManager() noexcept {
+EventBox::~EventBox() noexcept {
     if (event_ == nullptr) return;
     clReleaseEvent(event_);
     event_ = nullptr;
 }
 
-std::expected<EventManager, Error> EventManager::create() noexcept { return {}; }
+std::expected<EventBox, Error> EventBox::create() noexcept { return {}; }
 
-std::expected<void, Error> EventManager::wait(
-    std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept {
-    auto waitEvents = waitEventMgrs | rgs::views::transform(exposeEvent) | rgs::to<std::vector>();
+std::expected<void, Error> EventBox::wait(std::span<std::reference_wrapper<const EventBox>> waitEventBoxs) noexcept {
+    auto waitEvents = waitEventBoxs | rgs::views::transform(exposeEvent) | rgs::to<std::vector>();
     const cl_int clErr = clWaitForEvents(waitEvents.size(), waitEvents.data());
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
     return {};
 }
 
-cl_event EventManager::exposeEvent(const EventManager& eventMgr) noexcept { return eventMgr.getEvent(); }
+cl_event EventBox::exposeEvent(const EventBox& eventBox) noexcept { return eventBox.getEvent(); }
 
-std::expected<cl_ulong, Error> EventManager::getElapsedTimeNs() const noexcept {
+std::expected<cl_ulong, Error> EventBox::getElapsedTimeNs() const noexcept {
     cl_int clErr;
 
     cl_ulong time_start;

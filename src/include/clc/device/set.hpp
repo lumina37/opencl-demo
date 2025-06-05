@@ -51,15 +51,15 @@ std::expected<DeviceSet_<TProps>, Error> DeviceSet_<TProps>::create() noexcept {
 
         const auto& devices = devicesRes.value();
         for (const auto& device : devices) {
-            auto deviceMgrRes = DeviceManager::create(platform, device);
-            if (!deviceMgrRes) return std::unexpected{std::move(deviceMgrRes.error())};
-            auto& deviceMgr = deviceMgrRes.value();
+            auto deviceBoxRes = DeviceBox::create(platform, device);
+            if (!deviceBoxRes) return std::unexpected{std::move(deviceBoxRes.error())};
+            auto& deviceBox = deviceBoxRes.value();
 
             auto devicePropsRes = TProps::create(device);
             if (!devicePropsRes) return std::unexpected{std::move(devicePropsRes.error())};
             auto& deviceProps = devicePropsRes.value();
 
-            devicesWithProps.emplace_back(std::move(deviceMgr), std::move(deviceProps));
+            devicesWithProps.emplace_back(std::move(deviceBox), std::move(deviceProps));
         }
     }
 
@@ -79,7 +79,7 @@ auto DeviceSet_<TProps>::select(const FnJudge& judge) noexcept
             return str.substr(0, lastCh + 1);
         };
 
-        const cl_device_id device = deviceWithProps.getDeviceMgr().getDevice();
+        const cl_device_id device = deviceWithProps.getDeviceBox().getDevice();
         const TProps& props = deviceWithProps.getProps();
 
         auto deviceNameRes = getDeviceInfo<char[]>(device, CL_DEVICE_NAME);

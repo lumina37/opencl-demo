@@ -4,18 +4,18 @@
 
 #include <CL/cl.h>
 
-#include "clc/device/manager.hpp"
+#include "clc/device/box.hpp"
 
 namespace clc {
 
-class ContextManager {
-    ContextManager(cl_context context) noexcept;
+class ContextBox {
+    ContextBox(cl_context context) noexcept;
 
 public:
-    ContextManager(ContextManager&& rhs) noexcept;
-    ~ContextManager() noexcept;
+    ContextBox(ContextBox&& rhs) noexcept;
+    ~ContextBox() noexcept;
 
-    [[nodiscard]] static std::expected<ContextManager, Error> create(DeviceManager& deviceMgr) noexcept;
+    [[nodiscard]] static std::expected<ContextBox, Error> create(DeviceBox& deviceBox) noexcept;
 
     [[nodiscard]] cl_context getContext() const noexcept { return context_; }
 

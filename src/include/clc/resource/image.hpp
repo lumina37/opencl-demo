@@ -12,22 +12,22 @@
 
 namespace clc {
 
-class ImageManager {
-    ImageManager(cl_mem image) noexcept;
+class ImageBox {
+    ImageBox(cl_mem image) noexcept;
 
 public:
-    ImageManager(ImageManager&& rhs) noexcept;
-    ~ImageManager() noexcept;
+    ImageBox(ImageBox&& rhs) noexcept;
+    ~ImageBox() noexcept;
 
-    [[nodiscard]] static std::expected<ImageManager, Error> create(ContextManager& contextMgr, Extent extent,
+    [[nodiscard]] static std::expected<ImageBox, Error> create(ContextBox& contextBox, Extent extent,
                                                                     cl_mem_flags memType) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, Error> createRead(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<ImageBox, Error> createRead(ContextBox& contextBox,
                                                                         Extent extent) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, Error> createWrite(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<ImageBox, Error> createWrite(ContextBox& contextBox,
                                                                          Extent extent) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, Error> createReadUMA(ContextManager& contextMgr, Extent extent,
+    [[nodiscard]] static std::expected<ImageBox, Error> createReadUMA(ContextBox& contextBox, Extent extent,
                                                                            std::span<std::byte> hostMem) noexcept;
-    [[nodiscard]] static std::expected<ImageManager, Error> createWriteUMA(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<ImageBox, Error> createWriteUMA(ContextBox& contextBox,
                                                                             Extent extent) noexcept;
 
     [[nodiscard]] cl_mem getImage() const noexcept { return image_; }

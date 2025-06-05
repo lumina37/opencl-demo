@@ -7,22 +7,21 @@
 
 #include <CL/cl.h>
 
+#include "clc/device/box.hpp"
 #include "clc/device/context.hpp"
-#include "clc/device/manager.hpp"
 #include "clc/kernel/structs.hpp"
 
 namespace clc {
 
-class KernelManager {
-    KernelManager(cl_program program, cl_kernel kernel) noexcept;
+class KernelBox {
+    KernelBox(cl_program program, cl_kernel kernel) noexcept;
 
 public:
-    KernelManager(KernelManager&& rhs) noexcept;
-    ~KernelManager() noexcept;
+    KernelBox(KernelBox&& rhs) noexcept;
+    ~KernelBox() noexcept;
 
-    [[nodiscard]] static std::expected<KernelManager, Error> create(DeviceManager& deviceMgr,
-                                                                    ContextManager& contextMgr,
-                                                                    std::span<std::byte> code) noexcept;
+    [[nodiscard]] static std::expected<KernelBox, Error> create(DeviceBox& deviceBox, ContextBox& contextBox,
+                                                                std::span<std::byte> code) noexcept;
 
     template <typename Self>
     [[nodiscard]] auto&& getKernel(this Self&& self) noexcept {
@@ -39,5 +38,5 @@ private:
 }  // namespace clc
 
 #ifdef _CLC_LIB_HEADER_ONLY
-#    include "clc/kernel/manager.cpp"
+#    include "clc/kernel/box.cpp"
 #endif

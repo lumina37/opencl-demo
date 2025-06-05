@@ -4,17 +4,17 @@
 
 namespace clc {
 
-template <typename... TMgr>
-[[nodiscard]] static constexpr auto genKernelArgs(TMgr&... mgrs) noexcept {
-    const auto genKernelArg = []<typename T>(T& mgr) {
+template <typename... TBox>
+[[nodiscard]] static constexpr auto genKernelArgs(TBox&... boxes) noexcept {
+    const auto genKernelArg = []<typename T>(T& box) {
         if constexpr (CSupportGenKernelArg<T>) {
-            return mgr.genKernelArg();
+            return box.genKernelArg();
         } else {
-            return KernelArg{sizeof(T), &mgr};
+            return KernelArg{sizeof(T), &box};
         }
     };
 
-    return std::array{genKernelArg(mgrs)...};
+    return std::array{genKernelArg(boxes)...};
 }
 
 }  // namespace clc

@@ -10,20 +10,20 @@
 
 namespace clc {
 
-class EventManager {
-    EventManager(cl_event event) noexcept;
+class EventBox {
+    EventBox(cl_event event) noexcept;
 
 public:
-    EventManager() noexcept = default;
-    EventManager(EventManager&& rhs) noexcept;
-    ~EventManager() noexcept;
+    EventBox() noexcept = default;
+    EventBox(EventBox&& rhs) noexcept;
+    ~EventBox() noexcept;
 
-    [[nodiscard]] static std::expected<EventManager, Error> create() noexcept;
+    [[nodiscard]] static std::expected<EventBox, Error> create() noexcept;
 
     [[nodiscard]] static std::expected<void, Error> wait(
-        std::span<std::reference_wrapper<const EventManager>> eventMgrs) noexcept;
+        std::span<std::reference_wrapper<const EventBox>> eventBoxs) noexcept;
 
-    [[nodiscard]] static cl_event exposeEvent(const EventManager& eventMgr) noexcept;
+    [[nodiscard]] static cl_event exposeEvent(const EventBox& eventBox) noexcept;
 
     [[nodiscard]] cl_event getEvent() const noexcept { return event_; }
     [[nodiscard]] cl_event* getPEvent() noexcept { return &event_; }

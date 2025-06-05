@@ -7,18 +7,18 @@
 
 namespace clc {
 
-class BufferManager {
-    BufferManager(cl_mem&& buffer) noexcept;
+class BufferBox {
+    BufferBox(cl_mem&& buffer) noexcept;
 
 public:
-    BufferManager(BufferManager&& rhs) noexcept;
-    ~BufferManager() noexcept;
+    BufferBox(BufferBox&& rhs) noexcept;
+    ~BufferBox() noexcept;
 
-    [[nodiscard]] static std::expected<BufferManager, Error> create(ContextManager& contextMgr, size_t size,
+    [[nodiscard]] static std::expected<BufferBox, Error> create(ContextBox& contextBox, size_t size,
                                                                      cl_mem_flags memType) noexcept;
-    [[nodiscard]] static std::expected<BufferManager, Error> createRead(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<BufferBox, Error> createRead(ContextBox& contextBox,
                                                                          size_t size) noexcept;
-    [[nodiscard]] static std::expected<BufferManager, Error> createWrite(ContextManager& contextMgr,
+    [[nodiscard]] static std::expected<BufferBox, Error> createWrite(ContextBox& contextBox,
                                                                          size_t size) noexcept;
 
     [[nodiscard]] cl_mem getBuffer() const noexcept { return buffer_; }

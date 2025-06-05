@@ -23,38 +23,38 @@ namespace clc {
 
 namespace fs = std::filesystem;
 
-StbImageManager::StbImageManager(std::byte* image, Extent extent) noexcept : image_(image), extent_(extent) {}
+StbImageBox::StbImageBox(std::byte* image, Extent extent) noexcept : image_(image), extent_(extent) {}
 
-StbImageManager::StbImageManager(StbImageManager&& rhs) noexcept {
+StbImageBox::StbImageBox(StbImageBox&& rhs) noexcept {
     image_ = std::exchange(rhs.image_, nullptr);
     std::swap(extent_, rhs.extent_);
 }
 
-StbImageManager::~StbImageManager() noexcept {
+StbImageBox::~StbImageBox() noexcept {
     if (image_ == nullptr) return;
     STBI_FREE(image_);
     image_ = nullptr;
 }
 
-std::expected<StbImageManager, Error> StbImageManager::createFromPath(const fs::path& path) noexcept {
+std::expected<StbImageBox, Error> StbImageBox::createFromPath(const fs::path& path) noexcept {
     int width, height, oriComps;
     constexpr int comps = 4;
 
     std::byte* image = (std::byte*)stbi_load(path.string().c_str(), &width, &height, &oriComps, comps);
     if (image == nullptr) return std::unexpected{Error{1, "Failed to load image"}};
 
-    Extent extent{width, height, StbImageManager::mapStbCompsToClChannelOrder(comps), CL_UNORM_INT8};
-    return StbImageManager{image, extent};
+    Extent extent{width, height, StbImageBox::mapStbCompsToClChannelOrder(comps), CL_UNORM_INT8};
+    return StbImageBox{image, extent};
 }
 
-std::expected<StbImageManager, Error> StbImageManager::createWithExtent(const Extent extent) noexcept {
+std::expected<StbImageBox, Error> StbImageBox::createWithExtent(const Extent extent) noexcept {
     std::byte* image = (std::byte*)STBI_MALLOC(extent.size());
     if (image == nullptr) return std::unexpected{Error{1}};
 
-    return StbImageManager{image, extent};
+    return StbImageBox{image, extent};
 }
 
-std::expected<void, Error> StbImageManager::saveTo(const fs::path& path) const noexcept {
+std::expected<void, Error> StbImageBox::saveTo(const fs::path& path) const noexcept {
     const int stbErr = stbi_write_png(path.string().c_str(), extent_.width(), extent_.height(), extent_.bpp(), image_,
                                       (int)extent_.rowPitch());
 
@@ -62,7 +62,7 @@ std::expected<void, Error> StbImageManager::saveTo(const fs::path& path) const n
     return {};
 }
 
-constexpr cl_channel_order StbImageManager::mapStbCompsToClChannelOrder(const int comps) noexcept {
+constexpr cl_channel_order StbImageBox::mapStbCompsToClChannelOrder(const int comps) noexcept {
     switch (comps) {
         case 1:
             return CL_R;

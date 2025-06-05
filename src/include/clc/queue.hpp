@@ -7,8 +7,8 @@
 
 #include <CL/cl.h>
 
+#include "clc/device/box.hpp"
 #include "clc/device/context.hpp"
-#include "clc/device/manager.hpp"
 #include "clc/event.hpp"
 #include "clc/kernel.hpp"
 #include "clc/resource.hpp"
@@ -19,48 +19,45 @@ struct GroupSize {
     size_t x, y;
 };
 
-class QueueManager {
-    QueueManager(cl_command_queue queue) noexcept;
+class QueueBox {
+    QueueBox(cl_command_queue queue) noexcept;
 
 public:
-    QueueManager(QueueManager&&) noexcept;
-    ~QueueManager() noexcept;
+    QueueBox(QueueBox&&) noexcept;
+    ~QueueBox() noexcept;
 
-    [[nodiscard]] static std::expected<QueueManager, Error> createWithProps(DeviceManager& deviceMgr,
-                                                                            ContextManager& contextMgr,
-                                                                            cl_queue_properties queueProps) noexcept;
+    [[nodiscard]] static std::expected<QueueBox, Error> createWithProps(DeviceBox& deviceBox, ContextBox& contextBox,
+                                                                        cl_queue_properties queueProps) noexcept;
 
     [[nodiscard]] cl_command_queue getQueue() const noexcept { return queue_; }
 
-    [[nodiscard]] std::expected<EventManager, Error> uploadBufferFrom(
-        BufferManager& dstBufferMgr, std::span<std::byte> src,
-        std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;
+    [[nodiscard]] std::expected<EventBox, Error> uploadBufferFrom(
+        BufferBox& dstBufferBox, std::span<std::byte> src,
+        std::span<std::reference_wrapper<const EventBox>> waitEventBoxs) noexcept;
 
-    [[nodiscard]] std::expected<EventManager, Error> uploadImageFrom(
-        ImageManager& dstImageMgr, std::span<std::byte> src, Extent extent,
-        std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;
+    [[nodiscard]] std::expected<EventBox, Error> uploadImageFrom(
+        ImageBox& dstImageBox, std::span<std::byte> src, Extent extent,
+        std::span<std::reference_wrapper<const EventBox>> waitEventBoxs) noexcept;
 
-    [[nodiscard]] std::expected<EventManager, Error> dispatch(
-        const KernelManager& kernelMgr, Extent extent, GroupSize localGroupSize,
-        std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;
+    [[nodiscard]] std::expected<EventBox, Error> dispatch(
+        const KernelBox& kernelBox, Extent extent, GroupSize localGroupSize,
+        std::span<std::reference_wrapper<const EventBox>> waitEventBoxs) noexcept;
 
-    [[nodiscard]] std::expected<EventManager, Error> downloadBufferTo(
-        const BufferManager& srcBufferMgr, std::span<std::byte> dst,
-        std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;
+    [[nodiscard]] std::expected<EventBox, Error> downloadBufferTo(
+        const BufferBox& srcBufferBox, std::span<std::byte> dst,
+        std::span<std::reference_wrapper<const EventBox>> waitEventBoxs) noexcept;
 
-    [[nodiscard]] std::expected<EventManager, Error> downloadImageTo(
-        const ImageManager& srcImageMgr, std::span<std::byte> dst, Extent extent,
-        std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;
+    [[nodiscard]] std::expected<EventBox, Error> downloadImageTo(
+        const ImageBox& srcImageBox, std::span<std::byte> dst, Extent extent,
+        std::span<std::reference_wrapper<const EventBox>> waitEventBoxs) noexcept;
 
     [[nodiscard]] std::expected<std::span<std::byte>, Error> mmapForHostRead(
-        ImageManager& imageMgr, Extent extent,
-        std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;
+        ImageBox& imageBox, Extent extent, std::span<std::reference_wrapper<const EventBox>> waitEventBoxs) noexcept;
 
     [[nodiscard]] std::expected<std::span<std::byte>, Error> mmapForHostWrite(
-        ImageManager& imageMgr, Extent extent,
-        std::span<std::reference_wrapper<const EventManager>> waitEventMgrs) noexcept;
+        ImageBox& imageBox, Extent extent, std::span<std::reference_wrapper<const EventBox>> waitEventBoxs) noexcept;
 
-    [[nodiscard]] std::expected<void, Error> unmap(ImageManager& imageMgr, std::span<std::byte> mapSpan) noexcept;
+    [[nodiscard]] std::expected<void, Error> unmap(ImageBox& imageBox, std::span<std::byte> mapSpan) noexcept;
 
 private:
     cl_command_queue queue_;

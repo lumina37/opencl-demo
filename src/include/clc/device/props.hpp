@@ -9,8 +9,8 @@
 
 #include <CL/cl.h>
 
+#include "clc/device/box.hpp"
 #include "clc/device/concepts.hpp"
-#include "clc/device/manager.hpp"
 #include "clc/helper/error.hpp"
 
 namespace clc {
@@ -60,22 +60,22 @@ class DeviceWithProps_ {
 public:
     using TProps = TProps_;
 
-    DeviceWithProps_(DeviceManager&& deviceMgr, TProps&& props) noexcept;
+    DeviceWithProps_(DeviceBox&& deviceBox, TProps&& props) noexcept;
 
     template <typename Self>
-    [[nodiscard]] auto&& getDeviceMgr(this Self&& self) noexcept {
-        return std::forward_like<Self>(self).deviceMgr_;
+    [[nodiscard]] auto&& getDeviceBox(this Self&& self) noexcept {
+        return std::forward_like<Self>(self).deviceBox_;
     }
     [[nodiscard]] const TProps& getProps() const noexcept { return props_; }
 
 private:
-    DeviceManager deviceMgr_;
+    DeviceBox deviceBox_;
     TProps props_;
 };
 
 template <CDeviceProps TProps>
-DeviceWithProps_<TProps>::DeviceWithProps_(DeviceManager&& deviceMgr, TProps&& props) noexcept
-    : deviceMgr_(std::move(deviceMgr)), props_(std::move(props)) {}
+DeviceWithProps_<TProps>::DeviceWithProps_(DeviceBox&& deviceBox, TProps&& props) noexcept
+    : deviceBox_(std::move(deviceBox)), props_(std::move(props)) {}
 
 }  // namespace clc
 

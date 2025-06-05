@@ -12,33 +12,33 @@
 
 namespace clc {
 
-BufferManager::BufferManager(cl_mem&& buffer) noexcept : buffer_(buffer) {}
+BufferBox::BufferBox(cl_mem&& buffer) noexcept : buffer_(buffer) {}
 
-BufferManager::BufferManager(BufferManager&& rhs) noexcept : buffer_(std::exchange(rhs.buffer_, nullptr)) {}
+BufferBox::BufferBox(BufferBox&& rhs) noexcept : buffer_(std::exchange(rhs.buffer_, nullptr)) {}
 
-BufferManager::~BufferManager() noexcept {
+BufferBox::~BufferBox() noexcept {
     if (buffer_ == nullptr) return;
     clReleaseMemObject(buffer_);
     buffer_ = nullptr;
 }
 
-std::expected<BufferManager, Error> BufferManager::create(ContextManager& contextMgr, size_t size,
+std::expected<BufferBox, Error> BufferBox::create(ContextBox& contextBox, size_t size,
                                                           const cl_mem_flags memType) noexcept {
     cl_int clErr;
 
-    auto context = contextMgr.getContext();
+    auto context = contextBox.getContext();
     cl_mem buffer = clCreateBuffer(context, memType, size, nullptr, &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
-    return BufferManager{std::move(buffer)};
+    return BufferBox{std::move(buffer)};
 }
 
-std::expected<BufferManager, Error> BufferManager::createRead(ContextManager& contextMgr, size_t size) noexcept {
-    return create(contextMgr, size, CL_MEM_READ_ONLY);
+std::expected<BufferBox, Error> BufferBox::createRead(ContextBox& contextBox, size_t size) noexcept {
+    return create(contextBox, size, CL_MEM_READ_ONLY);
 }
 
-std::expected<BufferManager, Error> BufferManager::createWrite(ContextManager& contextMgr, size_t size) noexcept {
-    return create(contextMgr, size, CL_MEM_WRITE_ONLY);
+std::expected<BufferBox, Error> BufferBox::createWrite(ContextBox& contextBox, size_t size) noexcept {
+    return create(contextBox, size, CL_MEM_WRITE_ONLY);
 }
 
 }  // namespace clc
