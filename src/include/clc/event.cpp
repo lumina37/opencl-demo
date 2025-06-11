@@ -20,6 +20,11 @@ EventBox::EventBox(cl_event event) noexcept : event_(event) {}
 
 EventBox::EventBox(EventBox&& rhs) noexcept : event_(std::exchange(rhs.event_, nullptr)) {}
 
+EventBox& EventBox::operator=(EventBox&& rhs) noexcept {
+    event_ = std::exchange(rhs.event_, nullptr);
+    return *this;
+}
+
 EventBox::~EventBox() noexcept {
     if (event_ == nullptr) return;
     clReleaseEvent(event_);

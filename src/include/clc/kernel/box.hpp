@@ -17,7 +17,10 @@ class KernelBox {
     KernelBox(cl_program program, cl_kernel kernel) noexcept;
 
 public:
+    KernelBox(const KernelBox&) noexcept = delete;
+    KernelBox& operator=(const KernelBox&) noexcept = delete;
     KernelBox(KernelBox&& rhs) noexcept;
+    KernelBox& operator=(KernelBox&& rhs) noexcept;
     ~KernelBox() noexcept;
 
     [[nodiscard]] static std::expected<KernelBox, Error> create(DeviceBox& deviceBox, ContextBox& contextBox,

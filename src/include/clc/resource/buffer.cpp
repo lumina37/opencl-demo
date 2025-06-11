@@ -12,9 +12,14 @@
 
 namespace clc {
 
-BufferBox::BufferBox(cl_mem&& buffer) noexcept : buffer_(buffer) {}
+BufferBox::BufferBox(cl_mem buffer) noexcept : buffer_(buffer) {}
 
 BufferBox::BufferBox(BufferBox&& rhs) noexcept : buffer_(std::exchange(rhs.buffer_, nullptr)) {}
+
+BufferBox& BufferBox::operator=(BufferBox&& rhs) noexcept {
+    buffer_ = std::exchange(rhs.buffer_, nullptr);
+    return *this;
+}
 
 BufferBox::~BufferBox() noexcept {
     if (buffer_ == nullptr) return;
@@ -23,14 +28,14 @@ BufferBox::~BufferBox() noexcept {
 }
 
 std::expected<BufferBox, Error> BufferBox::create(ContextBox& contextBox, size_t size,
-                                                          const cl_mem_flags memType) noexcept {
+                                                  const cl_mem_flags memType) noexcept {
     cl_int clErr;
 
     auto context = contextBox.getContext();
     cl_mem buffer = clCreateBuffer(context, memType, size, nullptr, &clErr);
     if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
 
-    return BufferBox{std::move(buffer)};
+    return BufferBox{buffer};
 }
 
 std::expected<BufferBox, Error> BufferBox::createRead(ContextBox& contextBox, size_t size) noexcept {

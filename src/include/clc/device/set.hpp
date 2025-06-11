@@ -25,6 +25,11 @@ private:
     DeviceSet_(std::vector<TDeviceWithProps>&& devicesWithProps) noexcept;
 
 public:
+    DeviceSet_(const DeviceSet_&) noexcept = delete;
+    DeviceSet_& operator=(const DeviceSet_&) noexcept = delete;
+    DeviceSet_(DeviceSet_&& rhs) noexcept = default;
+    DeviceSet_& operator=(DeviceSet_&& rhs) noexcept = default;
+
     [[nodiscard]] static std::expected<DeviceSet_, Error> create() noexcept;
 
     [[nodiscard]] std::expected<std::reference_wrapper<TDeviceWithProps>, Error> select(const FnJudge& judge) noexcept;

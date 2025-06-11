@@ -11,8 +11,7 @@ namespace clc {
 
 namespace rgs = std::ranges;
 
-DeviceBox::DeviceBox(cl_platform_id platform, cl_device_id device) noexcept
-    : platform_(platform), device_(device) {}
+DeviceBox::DeviceBox(cl_platform_id platform, cl_device_id device) noexcept : platform_(platform), device_(device) {}
 
 std::expected<DeviceBox, Error> DeviceBox::create(cl_platform_id platform, cl_device_id device) noexcept {
     return DeviceBox{platform, device};

@@ -22,7 +22,12 @@ namespace rgs = std::ranges;
 
 QueueBox::QueueBox(cl_command_queue queue) noexcept : queue_(queue) {}
 
-QueueBox::QueueBox(QueueBox&& rhs) noexcept { queue_ = std::exchange(rhs.queue_, nullptr); }
+QueueBox::QueueBox(QueueBox&& rhs) noexcept : queue_(std::exchange(rhs.queue_, nullptr)) {}
+
+QueueBox& QueueBox::operator=(QueueBox&& rhs) noexcept {
+    queue_ = std::exchange(rhs.queue_, nullptr);
+    return *this;
+}
 
 QueueBox::~QueueBox() noexcept {
     if (queue_ == nullptr) return;

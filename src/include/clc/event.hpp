@@ -15,7 +15,10 @@ class EventBox {
 
 public:
     EventBox() noexcept = default;
+    EventBox(const EventBox&) noexcept = delete;
+    EventBox& operator=(const EventBox&) noexcept = delete;
     EventBox(EventBox&& rhs) noexcept;
+    EventBox& operator=(EventBox&& rhs) noexcept;
     ~EventBox() noexcept;
 
     [[nodiscard]] static std::expected<EventBox, Error> create() noexcept;

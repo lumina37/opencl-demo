@@ -18,7 +18,9 @@ namespace clc {
 class DeviceProps {
 public:
     DeviceProps() noexcept = default;
+    DeviceProps& operator=(const DeviceProps&) = delete;
     DeviceProps(const DeviceProps&) = delete;
+    DeviceProps& operator=(DeviceProps&&) noexcept = default;
     DeviceProps(DeviceProps&&) noexcept = default;
 
     [[nodiscard]] static std::expected<DeviceProps, Error> create(cl_device_id device) noexcept;

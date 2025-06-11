@@ -17,7 +17,10 @@ class StbImageBox {
     StbImageBox(std::byte* image, Extent extent) noexcept;
 
 public:
+    StbImageBox(const StbImageBox&) noexcept = delete;
+    StbImageBox& operator=(const StbImageBox&) noexcept = delete;
     StbImageBox(StbImageBox&& rhs) noexcept;
+    StbImageBox& operator=(StbImageBox&& rhs) noexcept;
     ~StbImageBox() noexcept;
 
     [[nodiscard]] static std::expected<StbImageBox, Error> createFromPath(const fs::path& path) noexcept;

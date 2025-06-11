@@ -15,7 +15,12 @@ namespace clc {
 
 ImageBox::ImageBox(cl_mem image) noexcept : image_(image) {}
 
-ImageBox::ImageBox(ImageBox&& rhs) noexcept { image_ = std::exchange(rhs.image_, nullptr); }
+ImageBox::ImageBox(ImageBox&& rhs) noexcept : image_(std::exchange(rhs.image_, nullptr)) {}
+
+ImageBox& ImageBox::operator=(ImageBox&& rhs) noexcept {
+    image_ = std::exchange(rhs.image_, nullptr);
+    return *this;
+}
 
 ImageBox::~ImageBox() noexcept {
     if (image_ == nullptr) return;

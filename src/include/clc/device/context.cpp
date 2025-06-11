@@ -14,7 +14,12 @@ namespace clc {
 
 ContextBox::ContextBox(cl_context context) noexcept : context_(context) {}
 
-ContextBox::ContextBox(ContextBox&& rhs) noexcept { context_ = std::exchange(rhs.context_, nullptr); }
+ContextBox::ContextBox(ContextBox&& rhs) noexcept : context_(std::exchange(rhs.context_, nullptr)) {}
+
+ContextBox& ContextBox::operator=(ContextBox&& rhs) noexcept {
+    context_ = std::exchange(rhs.context_, nullptr);
+    return *this;
+}
 
 ContextBox::~ContextBox() noexcept {
     if (context_ == nullptr) return;

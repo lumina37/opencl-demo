@@ -12,7 +12,10 @@ class ContextBox {
     ContextBox(cl_context context) noexcept;
 
 public:
+    ContextBox(const ContextBox&) noexcept = delete;
+    ContextBox& operator=(const ContextBox&) noexcept = delete;
     ContextBox(ContextBox&& rhs) noexcept;
+    ContextBox& operator=(ContextBox&& rhs) noexcept;
     ~ContextBox() noexcept;
 
     [[nodiscard]] static std::expected<ContextBox, Error> create(DeviceBox& deviceBox) noexcept;

@@ -23,7 +23,10 @@ class QueueBox {
     QueueBox(cl_command_queue queue) noexcept;
 
 public:
+    QueueBox(const QueueBox&) noexcept = delete;
+    QueueBox& operator=(const QueueBox&) noexcept = delete;
     QueueBox(QueueBox&&) noexcept;
+    QueueBox& operator=(QueueBox&& rhs) noexcept;
     ~QueueBox() noexcept;
 
     [[nodiscard]] static std::expected<QueueBox, Error> createWithProps(DeviceBox& deviceBox, ContextBox& contextBox,

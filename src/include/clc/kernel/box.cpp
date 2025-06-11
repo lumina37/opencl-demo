@@ -22,9 +22,13 @@ namespace rgs = std::ranges;
 
 KernelBox::KernelBox(cl_program program, cl_kernel kernel) noexcept : program_(program), kernel_(kernel) {}
 
-KernelBox::KernelBox(KernelBox&& rhs) noexcept {
+KernelBox::KernelBox(KernelBox&& rhs) noexcept
+    : program_(std::exchange(rhs.program_, nullptr)), kernel_(std::exchange(rhs.kernel_, nullptr)) {}
+
+KernelBox& KernelBox::operator=(KernelBox&& rhs) noexcept {
     program_ = std::exchange(rhs.program_, nullptr);
     kernel_ = std::exchange(rhs.kernel_, nullptr);
+    return *this;
 }
 
 KernelBox::~KernelBox() noexcept {
