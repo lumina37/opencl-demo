@@ -45,7 +45,7 @@ std::expected<QueueBox, Error> QueueBox::createWithProps(DeviceBox& deviceBox, C
                                     queueProps | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, (cl_queue_properties)0};
     cl_command_queue queue = clCreateCommandQueueWithProperties(context, device, queuePropArray.data(), &clErr);
 
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
     return QueueBox{queue};
 }
 
@@ -60,7 +60,7 @@ std::expected<EventBox, Error> QueueBox::uploadBufferFrom(
 
     const cl_int clErr = clEnqueueWriteBuffer(queue_, dstBufferBox.getBuffer(), false, 0, src.size(), src.data(),
                                               waitEvents.size(), waitEvents.data(), eventBox.getPEvent());
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return std::move(eventBox);
 }
@@ -79,7 +79,7 @@ std::expected<EventBox, Error> QueueBox::uploadImageFrom(
     const cl_int clErr =
         clEnqueueWriteImage(queue_, dstImageBox.getImage(), false, origin.data(), region.data(), extent.rowPitch(), 0,
                             src.data(), waitEvents.size(), waitEvents.data(), eventBox.getPEvent());
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return std::move(eventBox);
 }
@@ -98,7 +98,7 @@ std::expected<EventBox, Error> QueueBox::dispatch(
     const cl_int clErr =
         clEnqueueNDRangeKernel(queue_, kernelBox.getKernel(), 2, nullptr, (size_t*)&globalGroupSize,
                                (size_t*)&localGroupSize, waitEvents.size(), waitEvents.data(), eventBox.getPEvent());
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return std::move(eventBox);
 }
@@ -114,7 +114,7 @@ std::expected<EventBox, Error> QueueBox::downloadBufferTo(
 
     const cl_int clErr = clEnqueueReadBuffer(queue_, srcBufferBox.getBuffer(), false, 0, dst.size(), dst.data(),
                                              waitEvents.size(), waitEvents.data(), eventBox.getPEvent());
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return std::move(eventBox);
 }
@@ -133,7 +133,7 @@ std::expected<EventBox, Error> QueueBox::downloadImageTo(
     const cl_int clErr =
         clEnqueueReadImage(queue_, srcImageBox.getImage(), false, origin.data(), region.data(), extent.rowPitch(), 0,
                            dst.data(), waitEvents.size(), waitEvents.data(), eventBox.getPEvent());
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return std::move(eventBox);
 }
@@ -149,7 +149,7 @@ std::expected<std::span<std::byte>, Error> QueueBox::mmapForHostRead(
     size_t rowPitch;
     const void* mapPtr = clEnqueueMapImage(queue_, imageBox.getImage(), true, CL_MAP_READ, origin.data(), region.data(),
                                            &rowPitch, nullptr, waitEvents.size(), waitEvents.data(), nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     const std::span mapSpan{(std::byte*)mapPtr, extent.size()};
     return mapSpan;
@@ -167,7 +167,7 @@ std::expected<std::span<std::byte>, Error> QueueBox::mmapForHostWrite(
     const void* mapPtr =
         clEnqueueMapImage(queue_, imageBox.getImage(), true, CL_MAP_WRITE, origin.data(), region.data(), &rowPitch,
                           nullptr, waitEvents.size(), waitEvents.data(), nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     const std::span mapSpan{(std::byte*)mapPtr, extent.size()};
     return mapSpan;
@@ -175,7 +175,7 @@ std::expected<std::span<std::byte>, Error> QueueBox::mmapForHostWrite(
 
 std::expected<void, Error> QueueBox::unmap(ImageBox& imageBox, const std::span<std::byte> mapSpan) noexcept {
     const cl_int clErr = clEnqueueUnmapMemObject(queue_, imageBox.getImage(), mapSpan.data(), 0, nullptr, nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
     return {};
 }
 

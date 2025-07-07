@@ -43,7 +43,7 @@ std::expected<ImageBox, Error> ImageBox::create(ContextBox& contextBox, const Ex
 
     auto context = contextBox.getContext();
     cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return ImageBox{image};
 }
@@ -74,7 +74,7 @@ std::expected<ImageBox, Error> ImageBox::createReadUMA(ContextBox& contextBox, E
     imageFormat.image_channel_data_type = extent.clChannelType();
 
     cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, hostMem.data(), &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return ImageBox{image};
 }
@@ -95,7 +95,7 @@ std::expected<ImageBox, Error> ImageBox::createWriteUMA(ContextBox& contextBox, 
     imageFormat.image_channel_data_type = extent.clChannelType();
 
     cl_mem image = clCreateImage(context, memType, &imageFormat, &imageDesc, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return ImageBox{image};
 }

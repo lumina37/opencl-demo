@@ -115,7 +115,7 @@ auto DeviceSet_<TProps>::select(const FnJudge& judge) noexcept
     }
 
     if (scores.empty()) {
-        return std::unexpected{Error{1, "no sufficient device"}};
+        return std::unexpected{Error{ECate::eCLC, ECode::eNoSupport, "no sufficient device"}};
     }
 
     auto maxScoreIt = std::max_element(scores.begin(), scores.end());

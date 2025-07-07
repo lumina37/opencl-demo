@@ -48,7 +48,7 @@ std::expected<KernelBox, Error> KernelBox::create(DeviceBox& deviceBox, ContextB
     auto context = contextBox.getContext();
     auto pCode = (const char*)code.data();
     cl_program program = clCreateProgramWithSource(context, 1, &pCode, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     auto device = deviceBox.getDevice();
     clErr = clBuildProgram(program, 1, &device, nullptr, nullptr, nullptr);
@@ -62,10 +62,10 @@ std::expected<KernelBox, Error> KernelBox::create(DeviceBox& deviceBox, ContextB
             std::println(std::cerr, "Kernel build failed: {}", pLog.get());
         }
     }
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     cl_kernel kernel = clCreateKernel(program, "clcmain", &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return KernelBox{program, kernel};
 }
@@ -73,7 +73,7 @@ std::expected<KernelBox, Error> KernelBox::create(DeviceBox& deviceBox, ContextB
 std::expected<void, Error> KernelBox::setKernelArgs(const std::span<const KernelArg> args) noexcept {
     for (const auto& [idx, arg] : rgs::views::enumerate(args)) {
         cl_int clErr = clSetKernelArg(kernel_, idx, arg.size, arg.ptr);
-        if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+        if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
     }
     return {};
 }

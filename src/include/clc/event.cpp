@@ -36,7 +36,7 @@ std::expected<EventBox, Error> EventBox::create() noexcept { return {}; }
 std::expected<void, Error> EventBox::wait(std::span<std::reference_wrapper<const EventBox>> waitEventBoxs) noexcept {
     auto waitEvents = waitEventBoxs | rgs::views::transform(exposeEvent) | rgs::to<std::vector>();
     const cl_int clErr = clWaitForEvents(waitEvents.size(), waitEvents.data());
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
     return {};
 }
 
@@ -49,9 +49,9 @@ std::expected<cl_ulong, Error> EventBox::getElapsedTimeNs() const noexcept {
     cl_ulong time_end;
 
     clErr = clGetEventProfilingInfo(event_, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
     clErr = clGetEventProfilingInfo(event_, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     cl_ulong timecostNs = time_end - time_start;
     return timecostNs;

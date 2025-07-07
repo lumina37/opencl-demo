@@ -33,7 +33,7 @@ std::expected<BufferBox, Error> BufferBox::create(ContextBox& contextBox, size_t
 
     auto context = contextBox.getContext();
     cl_mem buffer = clCreateBuffer(context, memType, size, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return BufferBox{buffer};
 }

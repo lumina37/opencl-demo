@@ -32,7 +32,7 @@ std::expected<ContextBox, Error> ContextBox::create(DeviceBox& deviceBox) noexce
 
     auto device = deviceBox.getDevice();
     cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &clErr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return ContextBox{context};
 }

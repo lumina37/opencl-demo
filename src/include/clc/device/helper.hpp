@@ -37,7 +37,7 @@ template <typename Tv>
 std::expected<Tv, Error> getPlatformInfo(const cl_platform_id& platform, const cl_device_info& key) {
     Tv value;
     const cl_int clErr = clGetPlatformInfo(platform, key, sizeof(Tv), &value, nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
     return value;
 }
 
@@ -48,11 +48,11 @@ std::expected<std::vector<TElem>, Error> getPlatformInfo(const cl_platform_id& p
 
     size_t valueSize;
     clErr = clGetPlatformInfo(platform, key, 0, nullptr, &valueSize);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     std::vector<TElem> value(valueSize);  // TODO: how to avoid pre-init?
     clErr = clGetPlatformInfo(platform, key, valueSize, value.data(), nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return value;
 }
@@ -62,7 +62,7 @@ template <typename Tv>
 std::expected<Tv, Error> getDeviceInfo(const cl_device_id& device, const cl_device_info& key) {
     Tv value;
     const cl_int clErr = clGetDeviceInfo(device, key, sizeof(Tv), &value, nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
     return value;
 }
 
@@ -73,11 +73,11 @@ std::expected<std::vector<TElem>, Error> getDeviceInfo(const cl_device_id& devic
 
     size_t valueSize;
     clErr = clGetDeviceInfo(device, key, 0, nullptr, &valueSize);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     std::vector<TElem> value(valueSize);  // TODO: how to avoid pre-init?
     clErr = clGetDeviceInfo(device, key, valueSize, value.data(), nullptr);
-    if (clErr != CL_SUCCESS) return std::unexpected{Error{clErr}};
+    if (clErr != CL_SUCCESS) return std::unexpected{Error{ECate::eCL, clErr}};
 
     return value;
 }
